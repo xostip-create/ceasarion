@@ -2,6 +2,12 @@
 {
   "placeholderImages": [
     {
+      "id": "app-logo",
+      "description": "Ceasarion Brand Logo",
+      "imageUrl": "https://i.postimg.cc/1t7g2hqQ/t-Sfhl-removebg-preview.png",
+      "imageHint": "company logo"
+    },
+    {
       "id": "hero-bg",
       "description": "Abstract digital connectivity network",
       "imageUrl": "https://picsum.photos/seed/ceasarion-1/1200/800",

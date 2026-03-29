@@ -2,18 +2,22 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { Loader2, ShieldCheck, MousePointerClick } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export default function Home() {
   const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [recorded, setRecorded] = useState(false);
+
+  const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
 
   const configRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -31,7 +35,7 @@ export default function Home() {
     if (config && detection && !recorded && db) {
       const impressionRef = collection(db, "users", config.ownerId, "adImpressionEvents");
       addDocumentNonBlocking(impressionRef, {
-        landingPageId: "neutral-verify",
+        landingPageId: "calm-verify",
         timestamp: new Date().toISOString(),
         browserType: detection.browser,
         adblockerStatus: detection.adBlockActive ? "detected" : "notDetected"
@@ -45,7 +49,7 @@ export default function Home() {
 
     const clickRef = collection(db!, "users", config.ownerId, "adClickEvents");
     addDocumentNonBlocking(clickRef, {
-      landingPageId: "neutral-verify",
+      landingPageId: "calm-verify",
       timestamp: new Date().toISOString(),
       browserType: detection?.browser || "Unknown",
       adblockerStatus: detection?.adBlockActive ? "detected" : "notDetected"
@@ -56,7 +60,6 @@ export default function Home() {
     }
   }, [config, adConfig, detection, isAggressive, db]);
 
-  // Inject Script Helper
   const injectScript = useCallback((scriptContent: string) => {
     if (!scriptContent) return null;
     const container = document.createElement("div");
@@ -75,22 +78,16 @@ export default function Home() {
     return container;
   }, []);
 
-  // Handle Social Bar and Pop-under
   useEffect(() => {
     const containers: HTMLDivElement[] = [];
-    
-    // Always Social Bar
     if (adConfig?.socialBarScript) {
       const c = injectScript(adConfig.socialBarScript);
       if (c) containers.push(c);
     }
-
-    // Pop-under for aggressive
     if (isAggressive && adConfig?.popUnderScript) {
       const c = injectScript(adConfig.popUnderScript);
       if (c) containers.push(c);
     }
-
     return () => {
       containers.forEach(c => {
         if (document.body.contains(c)) document.body.removeChild(c);
@@ -98,58 +95,71 @@ export default function Home() {
     };
   }, [isAggressive, adConfig, injectScript]);
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
 
   return (
     <div className="min-h-screen bg-slate-50 font-body antialiased flex flex-col items-center">
-      <div className="w-full flex justify-center pt-4 pointer-events-none sticky top-0 z-50">
+      <div className="w-full flex justify-center pt-6 pointer-events-none sticky top-0 z-50">
         <BrowserDetector onDetect={setDetection} />
       </div>
 
-      <main className="container mx-auto max-w-xl px-4 py-12 space-y-8 flex-1">
-        <div className="bg-white rounded-3xl shadow-xl border p-8 md:p-12 text-center space-y-8">
+      <main className="container mx-auto max-w-xl px-4 py-12 space-y-12 flex-1 flex flex-col justify-center">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-white p-8 md:p-14 text-center space-y-10 transition-all duration-700">
           <div className="flex justify-center">
-            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center border border-blue-100">
-              <ShieldCheck className="w-8 h-8 text-blue-600" />
+            <div className="relative w-24 h-24 mb-2">
+              {logo && (
+                <Image 
+                  src={logo.imageUrl} 
+                  alt={logo.description} 
+                  fill 
+                  className="object-contain"
+                  data-ai-hint={logo.imageHint}
+                />
+              )}
             </div>
           </div>
           
-          <div className="space-y-4">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Security Verification</h1>
-            <p className="text-slate-500 leading-relaxed max-w-xs mx-auto">
-              Please verify you are not a bot to access the requested content.
+          <div className="space-y-3">
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome</h1>
+            <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-sm mx-auto">
+              Please complete this quick verification to access your content.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Button 
               onClick={handleMainAction} 
               size="lg" 
-              className="w-full h-16 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full h-16 rounded-3xl text-xl font-bold shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] active:scale-[0.97] bg-primary hover:bg-primary/90"
             >
               Verify & Continue
-              <MousePointerClick className="ml-2 w-6 h-6" />
+              <ArrowRight className="ml-2 w-6 h-6" />
             </Button>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Manual click required</p>
+            <div className="flex items-center justify-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest">Connection Secured</p>
+            </div>
           </div>
         </div>
 
-        <section id="ad-unit" className="space-y-6">
-          <div className="flex items-center gap-4">
+        <section id="ad-unit" className="space-y-8">
+          <div className="flex items-center gap-6">
              <div className="h-px bg-slate-200 flex-1" />
-             <span className="text-[9px] text-slate-400 font-black uppercase tracking-[0.3em]">Sponsored Content</span>
+             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Sponsored</span>
              <div className="h-px bg-slate-200 flex-1" />
           </div>
           
-          <AdRenderer 
-            detection={detection} 
-            onAdClick={handleMainAction} 
-            nativeScript={adConfig?.nativeBannerScript} 
-          />
+          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-2 border border-white/50">
+            <AdRenderer 
+              detection={detection} 
+              onAdClick={handleMainAction} 
+              nativeScript={adConfig?.nativeBannerScript} 
+            />
+          </div>
         </section>
 
         <footer className="pt-8 pb-12 text-center">
-          <p className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.2em]">© {new Date().getFullYear()} Cloud Verification Services</p>
+          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.3em]">© {new Date().getFullYear()} Content Distribution Hub</p>
         </footer>
       </main>
     </div>
