@@ -1,444 +1,92 @@
+
 {
   "entities": {
+    "AdConfig": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdConfig",
+      "type": "object",
+      "description": "Global ad configuration settings for the arbitrage engine.",
+      "properties": {
+        "smartLink": {
+          "type": "string",
+          "description": "The primary Adsterra Smart Link URL."
+        },
+        "popUnderScript": {
+          "type": "string",
+          "description": "The HTML/JS script for the Pop-under ad format."
+        },
+        "nativeBannerScript": {
+          "type": "string",
+          "description": "The HTML/JS script for the Native Banner ad format."
+        },
+        "aggressiveBrowsers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of browser names that trigger the aggressive fallback logic (e.g., Brave, Firefox)."
+        }
+      }
+    },
     "LandingPage": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LandingPage",
       "type": "object",
-      "description": "Represents a single landing page designed to receive traffic and display dynamic advertisements. This is the page users from traffic sources like Facebook will see.",
+      "description": "Represents a single landing page designed to receive traffic and display dynamic advertisements.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the LandingPage entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "A human-readable name for the landing page (e.g., 'Facebook Arbitrage Page')."
-        },
-        "slug": {
-          "type": "string",
-          "description": "A URL-friendly slug that uniquely identifies the landing page for external access (e.g., 'my-fb-offer-1')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the landing page's purpose or content."
-        },
-        "htmlContent": {
-          "type": "string",
-          "description": "The full HTML content or a template string for the landing page, where ad scripts will be dynamically injected."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the landing page was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the landing page was last updated.",
-          "format": "date-time"
-        }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "adConfig": { "$ref": "#/backend/entities/AdConfig" }
       },
-      "required": [
-        "id",
-        "name",
-        "slug",
-        "htmlContent",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "AdCampaign": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AdCampaign",
-      "type": "object",
-      "description": "Groups together multiple ad slot configurations for a specific advertising initiative on a landing page.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AdCampaign entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "A human-readable name for the ad campaign (e.g., 'Direct Link Summer Promo')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the ad campaign's goals or content."
-        },
-        "landingPageId": {
-          "type": "string",
-          "description": "Reference to the LandingPage where this campaign is deployed. (Relationship: LandingPage 1:N AdCampaign)"
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "A boolean flag indicating if the ad campaign is currently active and serving ads."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the ad campaign was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the ad campaign was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "landingPageId",
-        "isActive",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "AdSlotConfiguration": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AdSlotConfiguration",
-      "type": "object",
-      "description": "Defines a specific advertisement type and its content, along with targeting rules based on browser and adblocker status.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AdSlotConfiguration entity."
-        },
-        "campaignId": {
-          "type": "string",
-          "description": "Reference to the AdCampaign this ad slot belongs to. (Relationship: AdCampaign 1:N AdSlotConfiguration)"
-        },
-        "name": {
-          "type": "string",
-          "description": "A descriptive name for this specific ad slot configuration (e.g., 'Direct Link for Chrome, No Adblocker')."
-        },
-        "adType": {
-          "type": "string",
-          "description": "The type of advertisement format used from Adsterra.",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        },
-        "adContent": {
-          "type": "string",
-          "description": "The actual Adsterra script, direct link URL, or other content for this ad slot."
-        },
-        "targetBrowser": {
-          "type": "string",
-          "description": "The browser type this ad configuration is primarily intended for. 'All' implies no specific browser targeting.",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        },
-        "targetAdblockerStatus": {
-          "type": "string",
-          "description": "The adblocker detection status this ad configuration is intended for. 'All' implies no specific adblocker status targeting.",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        },
-        "priority": {
-          "type": "number",
-          "description": "A numerical value indicating the preference for this ad slot when multiple configurations match; lower numbers indicate higher priority for selection."
-        },
-        "isActive": {
-          "type": "boolean",
-          "description": "A boolean flag indicating if this specific ad slot configuration is active and available for serving."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp when the ad slot configuration was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp when the ad slot configuration was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "campaignId",
-        "name",
-        "adType",
-        "adContent",
-        "targetBrowser",
-        "targetAdblockerStatus",
-        "priority",
-        "isActive",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "name", "ownerId"]
     },
     "AdImpressionEvent": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AdImpressionEvent",
       "type": "object",
-      "description": "Records an instance of an advertisement being successfully displayed to a user on a landing page.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AdImpressionEvent entity."
-        },
-        "adSlotConfigurationId": {
-          "type": "string",
-          "description": "Reference to the AdSlotConfiguration that was served. (Relationship: AdSlotConfiguration 1:N AdImpressionEvent)"
-        },
-        "landingPageId": {
-          "type": "string",
-          "description": "Reference to the LandingPage where the impression occurred. (Relationship: LandingPage 1:N AdImpressionEvent)"
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "The exact date and time when the ad impression occurred.",
-          "format": "date-time"
-        },
-        "browserType": {
-          "type": "string",
-          "description": "The type of browser detected at the time of the impression (e.g., 'Chrome', 'Firefox').",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        },
-        "adblockerStatus": {
-          "type": "string",
-          "description": "The status of adblocker detection at the time of the impression ('detected', 'notDetected', 'unknown').",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "adSlotConfigurationId",
-        "landingPageId",
-        "timestamp",
-        "browserType",
-        "adblockerStatus"
-      ]
+        "id": { "type": "string" },
+        "landingPageId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "browserType": { "type": "string" },
+        "adblockerStatus": { "type": "string" }
+      }
     },
     "AdClickEvent": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AdClickEvent",
       "type": "object",
-      "description": "Records an instance of a user clicking on an advertisement displayed on a landing page.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AdClickEvent entity."
-        },
-        "adSlotConfigurationId": {
-          "type": "string",
-          "description": "Reference to the AdSlotConfiguration that was clicked. (Relationship: AdSlotConfiguration 1:N AdClickEvent)"
-        },
-        "landingPageId": {
-          "type": "string",
-          "description": "Reference to the LandingPage where the click occurred. (Relationship: LandingPage 1:N AdClickEvent)"
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "The exact date and time when the ad click occurred.",
-          "format": "date-time"
-        },
-        "browserType": {
-          "type": "string",
-          "description": "The type of browser detected at the time of the click.",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        },
-        "adblockerStatus": {
-          "type": "string",
-          "description": "The status of adblocker detection at the time of the click.",
-          "format": "enum",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "adSlotConfigurationId",
-        "landingPageId",
-        "timestamp",
-        "browserType",
-        "adblockerStatus"
-      ]
+        "id": { "type": "string" },
+        "landingPageId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "browserType": { "type": "string" },
+        "adblockerStatus": { "type": "string" }
+      }
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/users/{userId}/adConfig/settings",
         "definition": {
-          "entityName": "user",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Top-level collection for owner-specific administrative data. This path identifies the owner for all nested private documents, providing the primary authorization context.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the authenticated owner/admin."
-            }
-          ]
+          "entityName": "AdConfig",
+          "schema": { "$ref": "#/backend/entities/AdConfig" },
+          "description": "Private ad configuration settings managed by the owner."
         }
       },
       {
-        "path": "/users/{userId}/landingPages/{landingPageId}",
+        "path": "/public_landing_pages/{id}",
         "definition": {
           "entityName": "LandingPage",
-          "schema": {
-            "$ref": "#/backend/entities/LandingPage"
-          },
-          "description": "Stores all administrative details of a landing page, managed by the owner. This is the source of truth for design and settings. Authorization is strictly tied to the parent 'userId'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the owner."
-            },
-            {
-              "name": "landingPageId",
-              "description": "The unique identifier for a specific LandingPage."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/landingPages/{landingPageId}/adCampaigns/{campaignId}",
-        "definition": {
-          "entityName": "AdCampaign",
-          "schema": {
-            "$ref": "#/backend/entities/AdCampaign"
-          },
-          "description": "Stores details for an ad campaign associated with a specific landing page, managed by the owner. Authorization is inherited from the parent 'userId' and 'landingPageId'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the owner."
-            },
-            {
-              "name": "landingPageId",
-              "description": "The unique identifier of the parent LandingPage."
-            },
-            {
-              "name": "campaignId",
-              "description": "The unique identifier for an AdCampaign."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/landingPages/{landingPageId}/adCampaigns/{campaignId}/adSlotConfigurations/{adSlotConfigurationId}",
-        "definition": {
-          "entityName": "AdSlotConfiguration",
-          "schema": {
-            "$ref": "#/backend/entities/AdSlotConfiguration"
-          },
-          "description": "Stores detailed ad slot configurations for a specific campaign, managed by the owner. Authorization is inherited from the parent 'userId', 'landingPageId', and 'campaignId'.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the owner."
-            },
-            {
-              "name": "landingPageId",
-              "description": "The unique identifier of the parent LandingPage."
-            },
-            {
-              "name": "campaignId",
-              "description": "The unique identifier of the parent AdCampaign."
-            },
-            {
-              "name": "adSlotConfigurationId",
-              "description": "The unique identifier for an AdSlotConfiguration."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/adImpressionEvents/{impressionId}",
-        "definition": {
-          "entityName": "AdImpressionEvent",
-          "schema": {
-            "$ref": "#/backend/entities/AdImpressionEvent"
-          },
-          "description": "Records ad impressions. This data is collected from public landing pages but is accessible only by the owner for analytics. Includes denormalized 'landingPageId' and 'adSlotConfigurationId' for query flexibility.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the owner."
-            },
-            {
-              "name": "impressionId",
-              "description": "The unique identifier for an AdImpressionEvent."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/adClickEvents/{clickId}",
-        "definition": {
-          "entityName": "AdClickEvent",
-          "schema": {
-            "$ref": "#/backend/entities/AdClickEvent"
-          },
-          "description": "Records ad clicks. This data is collected from public landing pages but is accessible only by the owner for analytics. Includes denormalized 'landingPageId' and 'adSlotConfigurationId' for query flexibility.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique Firebase Authentication UID of the owner."
-            },
-            {
-              "name": "clickId",
-              "description": "The unique identifier for an AdClickEvent."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/public_landing_pages/{landingPageSlug}",
-        "definition": {
-          "entityName": "LandingPage",
-          "schema": {
-            "$ref": "#/backend/entities/LandingPage"
-          },
-          "description": "Stores publicly accessible HTML content and active campaign references for client-side rendering. This collection is populated and updated by a Cloud Function. It includes denormalized 'ownerId' and 'activeCampaignId' to avoid authorization dependencies. Public read access allowed for client-side rendering.",
-          "params": [
-            {
-              "name": "landingPageSlug",
-              "description": "The URL-friendly slug that uniquely identifies the landing page for public access."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/public_ad_configurations/{adSlotConfigurationId}",
-        "definition": {
-          "entityName": "AdSlotConfiguration",
-          "schema": {
-            "$ref": "#/backend/entities/AdSlotConfiguration"
-          },
-          "description": "Stores active and publicly accessible ad slot configuration details (ad script, targeting rules) for client-side ad serving logic. This collection is populated and updated by a Cloud Function. It includes denormalized 'ownerId', 'landingPageId', and 'campaignId' for client-side queryability without authorization dependencies. Public read access allowed for client-side ad serving logic.",
-          "params": [
-            {
-              "name": "adSlotConfigurationId",
-              "description": "The unique identifier for an AdSlotConfiguration, used for public access."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/LandingPage" },
+          "description": "Publicly accessible landing page data including ad configurations."
         }
       }
-    ],
-    "reasoning": "The Firestore structure for Ceasarion is designed with a strict segregation of administrative (owner-managed) data and publicly accessible data. This ensures robust security, clear authorization intent, and adherence to Query-able Authorization Predicates (QAPs).\n\n**Owner-Managed Data (Private):**\nAll core management entities (Landing Pages, Ad Campaigns, Ad Slot Configurations, and Analytics) are nested directly under the `/users/{userId}` path. This establishes a strong, path-based ownership model where `request.auth.uid` must match the `{userId}` wildcard in the path for any read or write operations. This inherently provides Authorization Independence because a document's authorization context (its owner) is explicitly part of its path, eliminating the need for `get()` calls to parent documents to check ownership. For example, to access an Ad Campaign, the rule `allow read, write: if request.auth.uid == userId;` is sufficient and atomic. Analytics events are also nested under the user's path (e.g., `/users/{userId}/adImpressionEvents/{impressionId}`) to ensure only the owner can view their aggregate statistics, while still allowing efficient collection-level queries with `landingPageId` and `adSlotConfigurationId` fields.\n\n**Publicly Accessible Data (Client-Facing):**\nTo achieve QAPs for public access and strict Authorization Independence, public-facing data is stored in dedicated, top-level collections: `/public_landing_pages/{landingPageSlug}` and `/public_ad_configurations/{adSlotConfigurationId}`. These collections contain a carefully curated subset of data necessary for client-side rendering and ad serving, such as `htmlContent` and `adContent`, along with essential identifiers like `activeCampaignId`, `campaignId`, and `landingPageId` (all denormalized). These public collections are configured with `allow read: if true;` rules, making them globally readable without authentication. The crucial aspect here is that these public documents are populated and updated by a secure Cloud Function that listens for changes in the owner's private `/users/{userId}/...` data. This design completely decouples public read access from private management, ensuring that public requests never traverse the private user hierarchy or make authorization-dependent `get()` calls in security rules. This radical segregation provides clear QAPs for both public and private data: private data is queried by owner ID, and public data is queried without any authorization predicates, directly fetching what is needed.\n\n**Denormalization for Authorization Independence:**\n*   For owner-managed data, authorization is strictly path-based, leveraging the `{userId}` wildcard. Subcollection documents implicitly inherit the owner's context from their parent path, making them authorization-independent at their own level.\n*   For public data, critical fields like `activeCampaignId`, `campaignId`, `landingPageId`, and `ownerId` are denormalized directly into the `/public_landing_pages/{landingPageSlug}` and `/public_ad_configurations/{adSlotConfigurationId}` documents. This means clients requesting public content have all the necessary information (e.g., which campaign is active for a landing page, or which ad slot configs belong to a campaign) available within the document or via direct query on the public collection. No `get()` operations are needed to check access to a 'parent' private document, as the public documents are self-contained for their access purposes."
+    ]
   }
 }
