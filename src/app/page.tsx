@@ -27,8 +27,10 @@ export default function Home() {
   const { data: config, isLoading } = useDoc(configRef);
 
   const adConfig = config?.adConfig;
+  
+  // Robust check for aggressive browsers
   const isAggressive = detection && adConfig?.aggressiveBrowsers?.some((b: string) => 
-    detection.browser.toLowerCase().includes(b.toLowerCase())
+    detection.browser.toLowerCase().trim().includes(b.toLowerCase().trim())
   );
 
   useEffect(() => {
@@ -57,24 +59,43 @@ export default function Home() {
       adblockerStatus: detection?.adBlockActive ? "detected" : "notDetected"
     });
 
-    // Smart Link is the target, unless aggressive detection forces a different flow
+    // If it's a standard browser, redirect to Smart Link
     if (adConfig.smartLink && !isAggressive) {
       window.location.href = adConfig.smartLink;
     } else {
-      // For aggressive browsers, we rely on the Pop-under which should trigger on any click
-      // or we can manually trigger a secondary action here.
-      console.log("Aggressive browser detected. Fallback logic active.");
+      // For aggressive browsers, we rely on the Pop-under script injected in the background.
+      // Usually, Pop-under scripts listen for clicks on the entire document/window.
+      console.log("Aggressive environment detected. Fallback (Pop-under) system engaged.");
     }
   }, [config, adConfig, detection, isAggressive, db]);
 
   // Inject Pop-under if aggressive browser detected
   useEffect(() => {
     if (isAggressive && adConfig?.popUnderScript) {
-      const div = document.createElement("div");
-      div.innerHTML = adConfig.popUnderScript;
-      document.body.appendChild(div);
+      const container = document.createElement("div");
+      container.style.display = "none";
+      
+      const range = document.createRange();
+      const fragment = range.createContextualFragment(adConfig.popUnderScript);
+      
+      // Manually handle scripts to ensure they load and execute
+      const scripts = Array.from(fragment.querySelectorAll("script"));
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
+        Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        if (oldScript.innerHTML) {
+          newScript.innerHTML = oldScript.innerHTML;
+        }
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+      
+      container.appendChild(fragment);
+      document.body.appendChild(container);
+      
       return () => {
-        document.body.removeChild(div);
+        if (document.body.contains(container)) {
+          document.body.removeChild(container);
+        }
       };
     }
   }, [isAggressive, adConfig]);
@@ -82,7 +103,7 @@ export default function Home() {
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-body antialiased" onClick={isAggressive ? () => {} : undefined}>
+    <div className="min-h-screen bg-slate-50 font-body antialiased">
       <div className="sticky top-0 z-50 w-full flex justify-center pt-4 pointer-events-none">
         <BrowserDetector onDetect={setDetection} />
       </div>

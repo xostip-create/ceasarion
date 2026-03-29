@@ -14,17 +14,38 @@ interface AdRendererProps {
 }
 
 export function AdRenderer({ detection, onAdClick, nativeScript }: AdRendererProps) {
-  // Always display Native Banners if script exists
+  // Better script injection for Adsterra/External Scripts
   useEffect(() => {
     if (nativeScript) {
       const container = document.getElementById("native-ad-container");
       if (container) {
-        container.innerHTML = nativeScript;
-        // Optionally execute scripts manually if Adsterra scripts don't auto-run
-        const scripts = container.getElementsByTagName("script");
-        for (let i = 0; i < scripts.length; i++) {
-          eval(scripts[i].innerText);
-        }
+        container.innerHTML = ""; // Clear existing
+        
+        // Create a contextual fragment to handle the HTML string
+        const range = document.createRange();
+        const fragment = range.createContextualFragment(nativeScript);
+        
+        // Standard innerHTML does not execute <script> tags.
+        // We must manually create and append them to trigger loading/execution.
+        const scripts = Array.from(fragment.querySelectorAll("script"));
+        scripts.forEach(oldScript => {
+          const newScript = document.createElement("script");
+          
+          // Copy all attributes (src, async, type, etc.)
+          Array.from(oldScript.attributes).forEach(attr => {
+            newScript.setAttribute(attr.name, attr.value);
+          });
+          
+          // Copy inline script content if any
+          if (oldScript.innerHTML) {
+            newScript.innerHTML = oldScript.innerHTML;
+          }
+          
+          // Replace the old script with the new "executable" one in the fragment
+          oldScript.parentNode?.replaceChild(newScript, oldScript);
+        });
+        
+        container.appendChild(fragment);
       }
     }
   }, [nativeScript]);
