@@ -8,28 +8,18 @@ import { ExternalLink, Zap, MousePointer2, Image as ImageIcon, ArrowRight } from
 
 interface AdRendererProps {
   detection: DetectionResult | null;
+  onAdClick?: () => void;
 }
 
-export function AdRenderer({ detection }: AdRendererProps) {
-  const [adStrategy, setAdStrategy] = useState<string>("Initializing...");
+export function AdRenderer({ detection, onAdClick }: AdRendererProps) {
   const [adType, setAdType] = useState<"Direct Link" | "Native Banner" | "Pop-under" | "Social Bar">("Direct Link");
 
   useEffect(() => {
     if (!detection) return;
-
-    if (detection.adBlockActive) {
-      setAdStrategy("Serving optimized fallback content");
-      setAdType("Direct Link");
-    } else if (detection.isMobile) {
-      setAdStrategy("Mobile-ready discovery unit");
-      setAdType("Social Bar");
-    } else if (detection.browser === "Chrome") {
-      setAdStrategy("Premium desktop placement");
-      setAdType("Pop-under");
-    } else {
-      setAdStrategy("Recommended for your browser");
-      setAdType("Native Banner");
-    }
+    if (detection.adBlockActive) setAdType("Direct Link");
+    else if (detection.isMobile) setAdType("Social Bar");
+    else if (detection.browser === "Chrome") setAdType("Pop-under");
+    else setAdType("Native Banner");
   }, [detection]);
 
   if (!detection) return (
@@ -46,22 +36,18 @@ export function AdRenderer({ detection }: AdRendererProps) {
             <Zap className="w-4 h-4 text-accent" />
             SPONSORED CONTENT
           </CardTitle>
-          <div className="px-2 py-0.5 bg-blue-100 rounded text-[10px] font-bold text-blue-700 uppercase tracking-wider">
-            Verified
-          </div>
+          <div className="px-2 py-0.5 bg-blue-100 rounded text-[10px] font-bold text-blue-700 uppercase tracking-wider">Verified</div>
         </div>
       </CardHeader>
       <CardContent className="p-6">
         <div className="flex flex-col items-center justify-center text-center space-y-6">
           {adType === "Direct Link" && (
-            <div className="space-y-4 w-full max-w-sm">
-              <div className="p-8 bg-white rounded-2xl border flex flex-col items-center shadow-sm">
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Continue to Content</h3>
-                <p className="text-sm text-slate-500 mb-6">Click the button below to view the full details of this report.</p>
-                <Button size="lg" className="w-full font-bold h-14 rounded-xl text-lg group">
-                  Learn More <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </div>
+            <div className="p-8 bg-white rounded-2xl border flex flex-col items-center shadow-sm w-full max-w-sm">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Continue to Content</h3>
+              <p className="text-sm text-slate-500 mb-6">Click below to view the full report.</p>
+              <Button size="lg" className="w-full font-bold h-14 rounded-xl text-lg group" onClick={onAdClick}>
+                Learn More <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
             </div>
           )}
 
@@ -69,31 +55,19 @@ export function AdRenderer({ detection }: AdRendererProps) {
             <div className="space-y-4 w-full">
               <div className="aspect-video bg-slate-50 rounded-2xl flex flex-col items-center justify-center border border-dashed border-slate-200">
                 <MousePointer2 className="w-12 h-12 text-slate-300 mb-2" />
-                <p className="text-sm font-medium text-slate-400">Content loading in background...</p>
+                <p className="text-sm font-medium text-slate-400">Content loading...</p>
               </div>
-              <Button variant="outline" className="w-full rounded-xl h-12 font-bold">
-                Learn More
-              </Button>
+              <Button variant="outline" className="w-full rounded-xl h-12 font-bold" onClick={onAdClick}>Learn More</Button>
             </div>
           )}
 
           {adType === "Native Banner" && (
-            <div className="w-full space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                {[1].map((i) => (
-                  <div key={i} className="flex gap-4 p-4 bg-slate-50 rounded-2xl border hover:bg-white transition-all cursor-pointer group shadow-sm">
-                    <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 flex items-center justify-center overflow-hidden">
-                       <ImageIcon className="w-10 h-10 text-slate-400 opacity-50" />
-                    </div>
-                    <div className="flex flex-col justify-center text-left space-y-2">
-                      <div className="h-4 w-48 bg-slate-300 rounded" />
-                      <div className="h-3 w-32 bg-slate-200 rounded" />
-                      <Button variant="link" className="p-0 h-auto font-bold text-blue-600 justify-start">
-                        Learn More <ExternalLink className="ml-1 w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border hover:bg-white transition-all cursor-pointer group shadow-sm w-full" onClick={onAdClick}>
+              <div className="w-24 h-24 bg-slate-200 rounded-xl shrink-0 flex items-center justify-center overflow-hidden"><ImageIcon className="w-10 h-10 text-slate-400 opacity-50" /></div>
+              <div className="flex flex-col justify-center text-left space-y-2">
+                <div className="h-4 w-48 bg-slate-300 rounded" />
+                <div className="h-3 w-32 bg-slate-200 rounded" />
+                <span className="text-blue-600 text-sm font-bold flex items-center">Learn More <ExternalLink className="ml-1 w-3 h-3" /></span>
               </div>
             </div>
           )}
@@ -101,14 +75,9 @@ export function AdRenderer({ detection }: AdRendererProps) {
           {adType === "Social Bar" && (
             <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-right-10 duration-500">
                <div className="bg-white p-5 rounded-2xl shadow-2xl border-2 border-primary flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg">
-                    <Zap className="w-7 h-7" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-slate-900 leading-tight">Action Required</p>
-                    <p className="text-xs text-slate-500">Tap to continue reading...</p>
-                  </div>
-                  <Button size="sm" className="h-10 px-4 rounded-lg font-bold">Learn More</Button>
+                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white shadow-lg"><Zap className="w-7 h-7" /></div>
+                  <div className="text-left"><p className="text-sm font-bold text-slate-900 leading-tight">Action Required</p><p className="text-xs text-slate-500">Tap to continue...</p></div>
+                  <Button size="sm" className="h-10 px-4 rounded-lg font-bold" onClick={onAdClick}>Learn More</Button>
                </div>
             </div>
           )}
