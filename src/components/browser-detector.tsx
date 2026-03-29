@@ -1,9 +1,7 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { Monitor, Smartphone, ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export type DetectionResult = {
   browser: string;
@@ -30,7 +28,7 @@ export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
 
       const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
 
-      // Simple Adblock Detection
+      // Simple Detection for restricted environments
       let adBlockActive = false;
       const testAd = document.createElement("div");
       testAd.innerHTML = "&nbsp;";
@@ -62,7 +60,7 @@ export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
       {status === "checking" ? (
         <>
           <Loader2 className="w-3 h-3 text-primary animate-spin" />
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verifying Connection Secure...</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Optimizing Connection...</span>
         </>
       ) : (
         <>
@@ -75,7 +73,7 @@ export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
             {result?.adBlockActive ? (
               <>
                 <ShieldAlert className="w-3 h-3 text-accent" />
-                <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Bypass Mode Enabled</span>
+                <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Optimized Route Active</span>
               </>
             ) : (
               <>

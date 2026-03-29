@@ -36,20 +36,20 @@ export default function Home() {
               </div>
               
               <h1 className="text-5xl md:text-7xl font-headline font-bold text-primary leading-tight tracking-tight">
-                Bypass Adblockers with <span className="text-accent">Ceasarion</span>
+                Maximize Traffic ROI with <span className="text-accent">Ceasarion</span>
               </h1>
               
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Smart browser detection engine that dynamically serves the most profitable 
-                Adsterra formats based on user environment, ensuring 100% fill rate.
+                Intelligent traffic router that dynamically serves the most profitable 
+                offers based on user environment, ensuring maximum yield and 100% fill rate.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Button size="lg" className="bg-primary text-white h-14 px-10 text-lg font-bold rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-                  Start Monetizing Now
+                <Button asChild size="lg" className="bg-primary text-white h-14 px-10 text-lg font-bold rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+                  <Link href="/login">Start Monetizing Now</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-10 text-lg font-bold rounded-full border-2 hover:bg-secondary">
-                  View Demo Dashboard
+                <Button asChild size="lg" variant="outline" className="h-14 px-10 text-lg font-bold rounded-full border-2 hover:bg-secondary">
+                  <Link href="/dashboard">View Dashboard</Link>
                 </Button>
               </div>
 
@@ -76,7 +76,7 @@ export default function Home() {
             <div className="text-center mb-16 space-y-4">
               <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Advanced Arbitrage Technology</h2>
               <p className="text-muted-foreground max-w-xl mx-auto">
-                Stop losing up to 40% of your traffic revenue to browser restrictions.
+                Stop losing up to 40% of your traffic revenue to browser-level restrictions.
               </p>
             </div>
 
@@ -85,17 +85,17 @@ export default function Home() {
                 {
                   icon: <Cpu className="w-8 h-8 text-accent" />,
                   title: "Real-time Detection",
-                  desc: "Instantly identify browser version, OS, and ad-blocking software to tailor the user experience."
+                  desc: "Instantly identify browser version, OS, and environmental settings to tailor the perfect offer."
                 },
                 {
                   icon: <Layers className="w-8 h-8 text-accent" />,
-                  title: "Hybrid Ad Engine",
-                  desc: "Seamlessly switch between Pop-under, Native, and Direct Link formats to maximize CTR."
+                  title: "Hybrid Delivery Engine",
+                  desc: "Seamlessly switch between offer types to maximize click-through rate across all segments."
                 },
                 {
                   icon: <ShieldCheck className="w-8 h-8 text-accent" />,
-                  title: "Domain Rotation",
-                  desc: "Built-in anti-ban technology ensuring your arbitrage campaigns stay live and profitable."
+                  title: "Domain Protection",
+                  desc: "Built-in anti-restriction technology ensuring your arbitrage campaigns stay live and profitable."
                 }
               ].map((feature, idx) => (
                 <Card key={idx} className="border-none shadow-none bg-transparent group hover:translate-y-[-4px] transition-all">
@@ -122,14 +122,14 @@ export default function Home() {
                
                <h2 className="text-4xl md:text-5xl font-headline font-bold mb-6">Ready to scale your ROI?</h2>
                <p className="text-primary-foreground/80 text-xl max-w-2xl mb-10 leading-relaxed">
-                 Join over 1,200 successful traffic arbitrageurs using Ceasarion to outsmart browser limits.
+                 Join successful traffic arbitrageurs using Ceasarion to outsmart environmental limits.
                </p>
                
                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 h-14 px-12 text-lg font-bold rounded-full">
-                    Start Free Trial
+                  <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90 h-14 px-12 text-lg font-bold rounded-full">
+                    <Link href="/login">Start Free Trial</Link>
                   </Button>
-                  <Button size="lg" variant="outline" className="h-14 px-12 text-lg font-bold rounded-full border-white text-white hover:bg-white/10">
+                  <Button variant="outline" size="lg" className="h-14 px-12 text-lg font-bold rounded-full border-white text-white hover:bg-white/10">
                     Talk to Expert
                   </Button>
                </div>
