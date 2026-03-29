@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Abstract digital connectivity network",
+      "imageUrl": "https://picsum.photos/seed/ceasarion-1/1200/800",
+      "imageHint": "digital network"
+    },
+    {
+      "id": "analytics-preview",
+      "description": "Modern data dashboard interface",
+      "imageUrl": "https://picsum.photos/seed/ceasarion-2/800/600",
+      "imageHint": "data dashboard"
+    },
+    {
+      "id": "browser-icons",
+      "description": "Modern web browser logos collection",
+      "imageUrl": "https://picsum.photos/seed/ceasarion-3/600/400",
+      "imageHint": "web browsers"
+    }
+  ]
+}
