@@ -20,20 +20,17 @@ import {
   MousePointer2, 
   ShieldAlert,
   ArrowUpRight,
-  Monitor,
-  Smartphone,
+  ArrowDownRight,
   Plus,
   Globe,
   Loader2,
   ExternalLink,
-  Settings2
 } from "lucide-react";
 import { 
   Bar, 
   BarChart, 
   Line, 
   LineChart, 
-  ResponsiveContainer, 
   XAxis, 
   YAxis,
   CartesianGrid,
@@ -125,17 +122,48 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     if (!impressions || !clicks) return null;
+
     const totalImpressions = impressions.length;
     const totalClicks = clicks.length;
     const revenue = (totalClicks * 0.12) + (totalImpressions / 1000 * 0.45);
     const detected = impressions.filter(i => i.adblockerStatus === 'detected').length;
     const rate = totalImpressions > 0 ? (detected / totalImpressions * 100).toFixed(1) : "0.0";
 
+    // Calculate Trends (Last 24h vs Previous 24h)
+    const now = new Date();
+    const oneDay = 24 * 60 * 60 * 1000;
+    const todayStart = now.getTime() - oneDay;
+    const yesterdayStart = now.getTime() - (2 * oneDay);
+
+    const getCountInPeriod = (data: any[], start: number, end: number) => 
+      data.filter(item => {
+        const t = new Date(item.timestamp).getTime();
+        return t >= start && t < end;
+      }).length;
+
+    const currentImps = getCountInPeriod(impressions, todayStart, now.getTime());
+    const previousImps = getCountInPeriod(impressions, yesterdayStart, todayStart);
+    
+    const currentClicks = getCountInPeriod(clicks, todayStart, now.getTime());
+    const previousClicks = getCountInPeriod(clicks, yesterdayStart, todayStart);
+
+    const getTrend = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? "+100%" : "0%";
+      const diff = ((curr - prev) / prev) * 100;
+      return `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`;
+    };
+
     return {
       impressions: totalImpressions > 1000 ? `${(totalImpressions / 1000).toFixed(1)}K` : totalImpressions.toString(),
       clicks: totalClicks.toLocaleString(),
       revenue: `$${revenue.toFixed(2)}`,
-      optimizedRate: `${rate}%`
+      optimizedRate: `${rate}%`,
+      trends: {
+        impressions: getTrend(currentImps, previousImps),
+        clicks: getTrend(currentClicks, previousClicks),
+        revenue: getTrend(currentClicks, previousClicks), // Proportional to clicks
+        optimizedRate: getTrend(currentImps > 0 ? currentImps : 0, previousImps > 0 ? previousImps : 0) // Simplified
+      }
     };
   }, [impressions, clicks]);
 
@@ -244,20 +272,31 @@ export default function Dashboard() {
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { label: "Total Impressions", value: stats?.impressions || "0", trend: "+12.5%", icon: <Users className="text-primary" /> },
-                { label: "Optimized Rate", value: stats?.optimizedRate || "0%", trend: "+5.2%", icon: <ShieldAlert className="text-accent" /> },
-                { label: "Total Clicks", value: stats?.clicks || "0", trend: "+18.3%", icon: <MousePointer2 className="text-primary" /> },
-                { label: "Est. Revenue", value: stats?.revenue || "$0.00", trend: "+24.1%", icon: <TrendingUp className="text-green-500" /> },
+                { label: "Total Impressions", value: stats?.impressions || "0", trend: stats?.trends.impressions || "0%", icon: <Users className="text-primary" /> },
+                { label: "Optimized Rate", value: stats?.optimizedRate || "0%", trend: stats?.trends.optimizedRate || "0%", icon: <ShieldAlert className="text-accent" /> },
+                { label: "Total Clicks", value: stats?.clicks || "0", trend: stats?.trends.clicks || "0%", icon: <MousePointer2 className="text-primary" /> },
+                { label: "Est. Revenue", value: stats?.revenue || "$0.00", trend: stats?.trends.revenue || "0%", icon: <TrendingUp className="text-green-500" /> },
               ].map((stat, i) => (
-                <Card key={i} className="border-none shadow-sm"><CardContent className="p-6">
-                  <div className="flex justify-between items-start"><div className="p-2 bg-secondary rounded-xl">{stat.icon}</div><span className="text-xs font-bold text-green-600 flex items-center gap-1">{stat.trend} <ArrowUpRight className="w-3 h-3" /></span></div>
-                  <div className="mt-4"><p className="text-sm text-muted-foreground font-medium">{stat.label}</p><h3 className="text-3xl font-bold text-primary mt-1">{stat.value}</h3></div>
-                </CardContent></Card>
+                <Card key={i} className="border-none shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div className="p-2 bg-secondary rounded-xl">{stat.icon}</div>
+                      <span className={`text-xs font-bold flex items-center gap-1 ${stat.trend.startsWith('-') ? 'text-red-500' : 'text-green-600'}`}>
+                        {stat.trend} {stat.trend.startsWith('-') ? <ArrowDownRight className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                      </span>
+                    </div>
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
+                      <h3 className="text-3xl font-bold text-primary mt-1">{stat.value}</h3>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="lg:col-span-2 border-none shadow-sm"><CardHeader><CardTitle>Daily Traffic Performance</CardTitle></CardHeader>
+              <Card className="lg:col-span-2 border-none shadow-sm">
+                <CardHeader><CardTitle>Daily Traffic Performance</CardTitle></CardHeader>
                 <CardContent>
                   <ChartContainer config={trafficChartConfig} className="h-[300px] w-full">
                     <LineChart data={chartData}>
@@ -272,7 +311,8 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="border-none shadow-sm"><CardHeader><CardTitle>Browser Targeting</CardTitle></CardHeader>
+              <Card className="border-none shadow-sm">
+                <CardHeader><CardTitle>Browser Targeting</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     <ChartContainer config={browserChartConfig} className="h-[200px] w-full">
@@ -301,8 +341,17 @@ export default function Dashboard() {
                     </CardHeader>
                     <CardContent className="space-y-4 pt-4">
                       <code className="text-xs bg-muted p-2 rounded block break-all font-mono text-primary/80 border">/l/{page.slug}</code>
-                      <div className="flex items-center justify-between pt-2"><span className="text-xs font-bold text-green-600 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live</span><span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleDateString()}</span></div>
-                      <div className="pt-4 flex gap-2"><Button variant="outline" size="sm" className="flex-1 rounded-full text-xs font-bold h-9" asChild><a href={`/l/${page.slug}`} target="_blank" rel="noopener noreferrer">Test <ExternalLink className="ml-1 w-3 h-3" /></a></Button></div>
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-xs font-bold text-green-600 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Live
+                        </span>
+                        <span className="text-xs text-muted-foreground">{new Date(page.updatedAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="pt-4 flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 rounded-full text-xs font-bold h-9" asChild>
+                          <a href={`/l/${page.slug}`} target="_blank" rel="noopener noreferrer">Test <ExternalLink className="ml-1 w-3 h-3" /></a>
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
