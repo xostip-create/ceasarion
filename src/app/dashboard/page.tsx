@@ -10,6 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
   Users, 
   MousePointer2, 
   Zap, 
@@ -21,10 +28,11 @@ import {
   Plus, 
   Trash2, 
   Layout,
-  RotateCcw
+  RotateCcw,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
 import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -39,15 +47,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { subDays, startOfDay, isAfter, parseISO, format } from "date-fns";
 
 const trafficChartConfig = {
   impressions: { label: "Impressions", color: "hsl(var(--chart-1))" },
   clicks: { label: "Clicks", color: "hsl(var(--chart-2))" },
 } satisfies ChartConfig;
 
+type DateRange = "today" | "7d" | "30d" | "all";
+
 export default function Dashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
+
+  // Filter State
+  const [dateRange, setDateRange] = useState<DateRange>("7d");
 
   // Ad Configuration State
   const [smartLink, setSmartLink] = useState("");
@@ -117,11 +131,31 @@ export default function Dashboard() {
     return query(collection(db, "users", user.uid, "adClickEvents"));
   }, [db, user]);
 
-  const { data: impressions } = useCollection(impressionsQuery);
-  const { data: clicks } = useCollection(clicksQuery);
+  const { data: allImpressions } = useCollection(impressionsQuery);
+  const { data: allClicks } = useCollection(clicksQuery);
+
+  // Filtered Data based on Date Range
+  const filteredData = useMemo(() => {
+    if (!allImpressions || !allClicks) return { impressions: [], clicks: [] };
+
+    let cutoff: Date | null = null;
+    if (dateRange === "today") cutoff = startOfDay(new Date());
+    else if (dateRange === "7d") cutoff = subDays(new Date(), 7);
+    else if (dateRange === "30d") cutoff = subDays(new Date(), 30);
+
+    const impressions = cutoff 
+      ? allImpressions.filter(i => isAfter(parseISO(i.timestamp), cutoff!))
+      : allImpressions;
+
+    const clicks = cutoff 
+      ? allClicks.filter(c => isAfter(parseISO(c.timestamp), cutoff!))
+      : allClicks;
+
+    return { impressions, clicks };
+  }, [allImpressions, allClicks, dateRange]);
 
   const stats = useMemo(() => {
-    if (!impressions || !clicks) return null;
+    const { impressions, clicks } = filteredData;
     const totalImpressions = impressions.length;
     const totalClicks = clicks.length;
     const detected = impressions.filter(i => i.adblockerStatus === 'detected').length;
@@ -131,28 +165,43 @@ export default function Dashboard() {
       clicks: totalClicks.toLocaleString(),
       optimizedRate: `${rate}%`
     };
-  }, [impressions, clicks]);
+  }, [filteredData]);
 
   const chartData = useMemo(() => {
-    if (!impressions || !clicks) return [];
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    return days.map(day => ({
-      name: day,
-      impressions: impressions.filter(i => new Date(i.timestamp).toLocaleDateString('en-US', { weekday: 'short' }) === day).length,
-      clicks: clicks.filter(c => new Date(c.timestamp).toLocaleDateString('en-US', { weekday: 'short' }) === day).length,
-    }));
-  }, [impressions, clicks]);
+    const { impressions, clicks } = filteredData;
+    if (dateRange === "today") {
+      // Show hourly for today
+      const hours = Array.from({ length: 24 }, (_, i) => i);
+      return hours.map(hour => ({
+        name: `${hour}:00`,
+        impressions: impressions.filter(i => parseISO(i.timestamp).getHours() === hour).length,
+        clicks: clicks.filter(c => parseISO(c.timestamp).getHours() === hour).length,
+      }));
+    }
+
+    // Default to daily for other ranges
+    const dayCount = dateRange === "all" ? 14 : (dateRange === "7d" ? 7 : 30);
+    const data = [];
+    for (let i = dayCount - 1; i >= 0; i--) {
+      const d = subDays(new Date(), i);
+      const dateStr = d.toLocaleDateString();
+      data.push({
+        name: format(d, "MMM dd"),
+        impressions: impressions.filter(i => parseISO(i.timestamp).toLocaleDateString() === dateStr).length,
+        clicks: clicks.filter(c => parseISO(c.timestamp).toLocaleDateString() === dateStr).length,
+      });
+    }
+    return data;
+  }, [filteredData, dateRange]);
 
   const handleResetMetrics = () => {
-    if (!db || !user || !impressions || !clicks) return;
+    if (!db || !user || !allImpressions || !allClicks) return;
 
-    // Delete all impression events
-    impressions.forEach(imp => {
+    allImpressions.forEach(imp => {
       deleteDocumentNonBlocking(doc(db, "users", user.uid, "adImpressionEvents", imp.id));
     });
 
-    // Delete all click events
-    clicks.forEach(click => {
+    allClicks.forEach(click => {
       deleteDocumentNonBlocking(doc(db, "users", user.uid, "adClickEvents", click.id));
     });
   };
@@ -205,10 +254,27 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-white border rounded-full p-1 h-12">
-            <TabsTrigger value="overview" className="rounded-full px-8 h-10 data-[state=active]:bg-primary data-[state=active]:text-white">Overview</TabsTrigger>
-            <TabsTrigger value="ads" className="rounded-full px-8 h-10 data-[state=active]:bg-primary data-[state=active]:text-white">Ad Configuration</TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <TabsList className="bg-white border rounded-full p-1 h-12">
+              <TabsTrigger value="overview" className="rounded-full px-8 h-10 data-[state=active]:bg-primary data-[state=active]:text-white">Overview</TabsTrigger>
+              <TabsTrigger value="ads" className="rounded-full px-8 h-10 data-[state=active]:bg-primary data-[state=active]:text-white">Ad Configuration</TabsTrigger>
+            </TabsList>
+
+            <div className="flex items-center gap-2 bg-white border rounded-full px-4 h-12 shadow-sm">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+              <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
+                <SelectTrigger className="border-none shadow-none focus:ring-0 w-[140px] h-8 p-0 text-sm font-medium">
+                  <SelectValue placeholder="Select range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <TabsContent value="overview" className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -232,16 +298,49 @@ export default function Dashboard() {
             </div>
 
             <Card className="border-none shadow-sm">
-              <CardHeader><CardTitle>Traffic Performance</CardTitle></CardHeader>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Traffic Performance</CardTitle>
+                    <CardDescription>
+                      {dateRange === "today" ? "Hourly data for today" : `Daily trends for the selected period`}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent>
-                <ChartContainer config={trafficChartConfig} className="h-[300px] w-full">
-                  <LineChart data={chartData}>
+                <ChartContainer config={trafficChartConfig} className="h-[350px] w-full">
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 11}} 
+                      dy={10} 
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 11}} 
+                    />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line type="monotone" dataKey="impressions" stroke="var(--color-impressions)" strokeWidth={3} dot={false} />
-                    <Line type="monotone" dataKey="clicks" stroke="var(--color-clicks)" strokeWidth={3} dot={false} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="impressions" 
+                      stroke="var(--color-impressions)" 
+                      strokeWidth={3} 
+                      dot={{ r: 4, fill: "var(--color-impressions)", strokeWidth: 2 }} 
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="clicks" 
+                      stroke="var(--color-clicks)" 
+                      strokeWidth={3} 
+                      dot={{ r: 4, fill: "var(--color-clicks)", strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
+                    />
                   </LineChart>
                 </ChartContainer>
               </CardContent>
