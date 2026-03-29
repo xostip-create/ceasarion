@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Monitor, Smartphone, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Monitor, Smartphone, ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export type DetectionResult = {
@@ -17,6 +17,7 @@ interface BrowserDetectorProps {
 
 export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
   const [result, setResult] = useState<DetectionResult | null>(null);
+  const [status, setStatus] = useState<"checking" | "verified">("checking");
 
   useEffect(() => {
     const detect = async () => {
@@ -36,10 +37,11 @@ export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
       testAd.className = "adsbox";
       testAd.style.position = "absolute";
       testAd.style.left = "-9999px";
+      testAd.style.visibility = "hidden";
       document.body.appendChild(testAd);
       
-      // Give it a tiny bit of time
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Simulate network delay for "professional" feel
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       if (testAd.offsetHeight === 0) {
         adBlockActive = true;
@@ -48,34 +50,42 @@ export function BrowserDetector({ onDetect }: BrowserDetectorProps) {
 
       const detectionResult = { browser, isMobile, adBlockActive };
       setResult(detectionResult);
+      setStatus("verified");
       if (onDetect) onDetect(detectionResult);
     };
 
     detect();
   }, [onDetect]);
 
-  if (!result) return null;
-
   return (
-    <div className="flex flex-wrap gap-3 items-center p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-primary/10 shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
-      <div className="flex items-center gap-2">
-        {result.isMobile ? <Smartphone className="w-4 h-4 text-primary" /> : <Monitor className="w-4 h-4 text-primary" />}
-        <span className="text-sm font-medium">{result.browser}</span>
-      </div>
-      <div className="h-4 w-px bg-border" />
-      <div className="flex items-center gap-2">
-        {result.adBlockActive ? (
-          <>
-            <ShieldAlert className="w-4 h-4 text-destructive" />
-            <Badge variant="destructive" className="text-[10px] h-5">Adblock Detected</Badge>
-          </>
-        ) : (
-          <>
-            <ShieldCheck className="w-4 h-4 text-green-500" />
-            <Badge variant="secondary" className="text-[10px] h-5 bg-green-50 text-green-700 hover:bg-green-50">Safe for Ads</Badge>
-          </>
-        )}
-      </div>
+    <div className="flex items-center gap-3 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full border border-slate-200 shadow-lg pointer-events-auto transition-all duration-500 animate-in slide-in-from-top-4">
+      {status === "checking" ? (
+        <>
+          <Loader2 className="w-3 h-3 text-primary animate-spin" />
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Verifying Connection Secure...</span>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-2">
+            {result?.isMobile ? <Smartphone className="w-3 h-3 text-slate-400" /> : <Monitor className="w-3 h-3 text-slate-400" />}
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">{result?.browser} Connected</span>
+          </div>
+          <div className="h-3 w-px bg-slate-200" />
+          <div className="flex items-center gap-1.5">
+            {result?.adBlockActive ? (
+              <>
+                <ShieldAlert className="w-3 h-3 text-accent" />
+                <span className="text-[10px] font-bold text-accent uppercase tracking-tighter">Bypass Mode Enabled</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-3 h-3 text-green-500" />
+                <span className="text-[10px] font-bold text-green-600 uppercase tracking-tighter">Verified Traffic</span>
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

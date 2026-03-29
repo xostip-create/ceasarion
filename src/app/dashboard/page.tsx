@@ -26,7 +26,8 @@ import {
   Plus,
   Globe,
   Loader2,
-  ExternalLink
+  ExternalLink,
+  Settings2
 } from "lucide-react";
 import { 
   Bar, 
@@ -76,13 +77,52 @@ const browserData = [
   { name: "Others", value: 5, color: "hsl(var(--chart-5))" },
 ];
 
+const DEFAULT_TEMPLATE = `<article class="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
+  <header class="space-y-4">
+    <div class="flex items-center gap-2 text-[10px] font-extrabold text-blue-600 uppercase tracking-widest">
+      <span class="px-2 py-0.5 bg-blue-50 rounded border border-blue-100">Breaking News</span>
+      <span>• 5 Min Read</span>
+    </div>
+    <h1 class="text-3xl font-bold text-slate-900 leading-tight">
+      New Policy Changes Could Save Families Thousands This Year
+    </h1>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
+         <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div>
+        <p class="text-sm font-bold">Sarah Jenkins</p>
+        <p class="text-xs text-slate-500">Updated 2 hours ago</p>
+      </div>
+    </div>
+  </header>
+  
+  <div class="aspect-video bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200">
+     <img src="https://picsum.photos/seed/fb-news/800/450" alt="News Image" class="object-cover w-full h-full" />
+  </div>
+
+  <div class="space-y-4 text-slate-700 leading-relaxed">
+    <p class="text-lg font-medium text-slate-800">
+      A recent shift in federal guidelines is creating waves across the market, potentially offering significant relief for millions of families nationwide.
+    </p>
+    <p>
+      Industry experts suggest that these adjustments are designed to combat rising costs while providing a pathway for sustainable growth in the residential sector. Early reports indicate that early adopters of the tool below have seen the most benefit.
+    </p>
+  </div>
+  
+  <div class="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center space-y-4">
+    <h2 class="text-xl font-bold text-blue-900 underline decoration-accent/30 underline-offset-4 italic">Check Your Eligibility Below</h2>
+    <p class="text-sm text-blue-700">Our free tool helps you determine if you qualify for the new rebate program in under 60 seconds. No obligation required.</p>
+  </div>
+</article>`;
+
 export default function Dashboard() {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newSlug, setNewSlug] = useState("");
-  const [newHtml, setNewHtml] = useState("<section style='padding: 40px; text-align: center;'>\n  <h1>Exclusive Offer Just for You</h1>\n  <p>Click below to unlock your limited time access.</p>\n</section>");
+  const [newHtml, setNewHtml] = useState(DEFAULT_TEMPLATE);
 
   const landingPagesQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -118,6 +158,7 @@ export default function Dashboard() {
     setIsDialogOpen(false);
     setNewName("");
     setNewSlug("");
+    setNewHtml(DEFAULT_TEMPLATE);
   };
 
   if (isUserLoading) {
@@ -158,7 +199,7 @@ export default function Dashboard() {
                 <Plus className="w-4 h-4 mr-2" /> New Landing Page
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
                 <DialogTitle>Create Landing Page</DialogTitle>
                 <DialogDescription>
@@ -166,27 +207,30 @@ export default function Dashboard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Internal Campaign Name</Label>
-                  <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. FB Summer Promo 2024" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Campaign Name</Label>
+                    <Input id="name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="FB Summer Promo" />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="slug">URL Slug (/l/[slug])</Label>
+                    <Input id="slug" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="exclusive-offer" />
+                  </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="slug">Public URL Slug (/l/[slug])</Label>
-                  <Input id="slug" value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="e.g. exclusive-offer" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="html">Content HTML</Label>
+                  <Label htmlFor="html">Content HTML (Viral Template)</Label>
                   <Textarea 
                     id="html" 
                     value={newHtml} 
                     onChange={(e) => setNewHtml(e.target.value)} 
-                    rows={6}
+                    rows={12}
+                    className="font-mono text-xs"
                     placeholder="HTML content for the landing page..."
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleCreatePage} className="w-full rounded-full h-12 font-bold">Launch Landing Page</Button>
+                <Button onClick={handleCreatePage} className="w-full rounded-full h-12 font-bold text-lg">Launch Live Page</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -287,17 +331,22 @@ export default function Dashboard() {
                 [1, 2, 3].map(i => <Card key={i} className="h-48 animate-pulse bg-muted rounded-xl" />)
               ) : landingPages && landingPages.length > 0 ? (
                 landingPages.map((page) => (
-                  <Card key={page.id} className="hover:shadow-md transition-all border-none group bg-white shadow-sm">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                      <CardTitle className="text-lg font-bold text-primary">{page.name}</CardTitle>
-                      <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                         <Globe className="w-4 h-4 text-primary" />
+                  <Card key={page.id} className="hover:shadow-md transition-all border-none group bg-white shadow-sm overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 bg-primary/[0.02]">
+                      <CardTitle className="text-lg font-bold text-primary truncate max-w-[150px]">{page.name}</CardTitle>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                          <Settings2 className="w-4 h-4" />
+                        </Button>
+                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
+                           <Globe className="w-4 h-4 text-primary" />
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-4 pt-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Live URL</span>
-                        <code className="text-xs bg-muted p-2 rounded block break-all font-mono text-primary/80">/l/{page.slug}</code>
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Public URL</span>
+                        <code className="text-xs bg-muted p-2 rounded block break-all font-mono text-primary/80 border">/l/{page.slug}</code>
                       </div>
                       <div className="flex items-center justify-between pt-2">
                          <span className="text-xs font-bold text-green-600 flex items-center gap-1">
@@ -325,7 +374,7 @@ export default function Dashboard() {
                   </div>
                   <div className="max-w-xs mx-auto space-y-2">
                     <h3 className="text-xl font-bold text-primary">No Active Flows</h3>
-                    <p className="text-sm text-muted-foreground">Launch your first landing page to begin routing and monetizing your traffic.</p>
+                    <p className="text-sm text-muted-foreground">Launch your first viral landing page to begin routing and monetizing your traffic.</p>
                   </div>
                   <Button onClick={() => setIsDialogOpen(true)} className="rounded-full h-12 px-8 font-bold shadow-lg shadow-primary/20">
                     Create My First Landing Page
