@@ -1,129 +1,111 @@
 
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Navbar } from "@/components/navbar";
+import { useState, useEffect } from "react";
+import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, collection } from "firebase/firestore";
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Zap, 
-  BarChart3, 
-  ShieldCheck, 
-  ArrowRight, 
-  Layers,
-  Cpu
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
-export default function Home() {
+export default function HardcodedOfferPage() {
+  const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
+  const [recorded, setRecorded] = useState(false);
+
+  const newsHero = PlaceHolderImages.find(img => img.id === 'news-hero');
+
+  // Look up the site owner UID from the 'main' public config
+  const configRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return doc(db, "public_landing_pages", "main");
+  }, [db]);
+
+  const { data: config, isLoading } = useDoc(configRef);
+
+  useEffect(() => {
+    if (config && detection && !recorded && db) {
+      const impressionRef = collection(db, "users", config.ownerId, "adImpressionEvents");
+      addDocumentNonBlocking(impressionRef, {
+        landingPageId: "home-offer",
+        adSlotConfigurationId: "default-slot",
+        timestamp: new Date().toISOString(),
+        browserType: detection.browser,
+        adblockerStatus: detection.adBlockActive ? "detected" : "notDetected"
+      });
+      setRecorded(true);
+    }
+  }, [config, detection, recorded, db]);
+
+  const handleAdClick = () => {
+    if (config && detection && db) {
+      const clickRef = collection(db, "users", config.ownerId, "adClickEvents");
+      addDocumentNonBlocking(clickRef, {
+        landingPageId: "home-offer",
+        adSlotConfigurationId: "default-slot",
+        timestamp: new Date().toISOString(),
+        browserType: detection.browser,
+        adblockerStatus: detection.adBlockActive ? "detected" : "notDetected"
+      });
+    }
+  };
+
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
 
   return (
-    <div className="min-h-screen font-body flex flex-col bg-background">
-      <Navbar />
-      
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative pt-20 pb-16 overflow-hidden">
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-4xl mx-auto text-center space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full border border-primary/10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <Zap className="w-4 h-4 text-accent" />
-                <span className="text-xs font-bold text-primary uppercase tracking-widest">Intelligent Traffic Monetization</span>
-              </div>
-              
-              <h1 className="text-5xl md:text-7xl font-headline font-bold text-primary leading-tight tracking-tight">
-                Maximize Traffic ROI with <span className="text-accent">Ceasarion</span>
-              </h1>
-              
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Intelligent traffic router that dynamically serves the most profitable 
-                offers based on user environment, ensuring maximum yield and 100% fill rate.
-              </p>
+    <div className="min-h-screen bg-slate-50 font-body antialiased">
+      <div className="sticky top-0 z-50 w-full flex justify-center pt-4 pointer-events-none">
+        <BrowserDetector onDetect={setDetection} />
+      </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Button asChild size="lg" className="bg-primary text-white h-14 px-10 text-lg font-bold rounded-full shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-                  <Link href="/offer">Test Offer Page</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="h-14 px-10 text-lg font-bold rounded-full border-2 hover:bg-secondary">
-                  <Link href="/dashboard">View Dashboard</Link>
-                </Button>
-              </div>
-
-              {/* Dynamic Interaction Area */}
-              <div className="mt-16 space-y-6">
-                <div className="flex justify-center">
-                   <BrowserDetector onDetect={setDetection} />
-                </div>
-                
-                <div className="max-w-3xl mx-auto">
-                   <AdRenderer detection={detection} />
-                </div>
-              </div>
+      <main className="container mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-10">
+        <article className="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
+          <header className="space-y-4">
+            <div className="flex items-center gap-2 text-[10px] font-extrabold text-blue-600 uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-blue-50 rounded border border-blue-100">Breaking News</span>
+              <span>• 5 Min Read</span>
             </div>
-          </div>
+            <h1 className="text-3xl font-bold text-slate-900 leading-tight">
+              New Policy Changes Could Save Families Thousands This Year
+            </h1>
+          </header>
           
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-accent/10 blur-[120px] rounded-full -z-10" />
-        </section>
-
-        {/* Features Grid */}
-        <section id="solutions" className="py-24 bg-white/50 backdrop-blur-sm border-t border-b">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16 space-y-4">
-              <h2 className="text-3xl md:text-4xl font-headline font-bold text-primary">Advanced Arbitrage Technology</h2>
-              <p className="text-muted-foreground max-w-xl mx-auto">
-                Built for high-performance traffic routing and environmental optimization.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                {
-                  icon: <Cpu className="w-8 h-8 text-accent" />,
-                  title: "Real-time Detection",
-                  desc: "Instantly identify browser version, OS, and environmental settings to tailor the perfect offer."
-                },
-                {
-                  icon: <Layers className="w-8 h-8 text-accent" />,
-                  title: "Hybrid Delivery Engine",
-                  desc: "Seamlessly switch between offer types to maximize click-through rate across all segments."
-                },
-                {
-                  icon: <ShieldCheck className="w-8 h-8 text-accent" />,
-                  title: "Domain Protection",
-                  desc: "Built-in optimization technology ensuring your arbitrage campaigns stay live and profitable."
-                }
-              ].map((feature, idx) => (
-                <Card key={idx} className="border-none shadow-none bg-transparent group hover:translate-y-[-4px] transition-all">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-xl font-bold text-primary">{feature.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200">
+             {newsHero && (
+               <Image 
+                 src={newsHero.imageUrl} 
+                 alt={newsHero.description} 
+                 fill 
+                 className="object-cover"
+                 data-ai-hint={newsHero.imageHint}
+               />
+             )}
           </div>
-        </section>
-      </main>
 
-      <footer className="py-12 bg-secondary/50 border-t">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-2">
-              <Zap className="w-6 h-6 text-primary" />
-              <span className="text-xl font-headline font-bold text-primary">Ceasarion</span>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} Ceasarion Arbitrage. All rights reserved.
+          <div className="space-y-4 text-slate-700 leading-relaxed">
+            <p className="text-lg font-medium text-slate-800">
+              A recent shift in federal guidelines is creating waves across the market, potentially offering significant relief for millions of families nationwide.
+            </p>
+            <p>
+              Industry experts suggest that the update, which took effect earlier this week, targets long-standing inefficiencies in the current system. While many were skeptical at first, the early data shows a promising trend for those who take action quickly.
             </p>
           </div>
-        </div>
-      </footer>
+        </article>
+
+        <section id="ad-unit" className="relative">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+             <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest bg-slate-50 px-2">Sponsored Link</span>
+          </div>
+          <AdRenderer detection={detection} onAdClick={handleAdClick} />
+        </section>
+
+        <footer className="pt-16 pb-12 text-center space-y-4">
+          <p className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.2em]">© {new Date().getFullYear()} News Discovery Network</p>
+        </footer>
+      </main>
     </div>
   );
 }

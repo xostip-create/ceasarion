@@ -19,8 +19,8 @@ export function Navbar() {
     router.push("/");
   };
 
-  // Hide navbar on the promotion page to maximize conversion
-  if (pathname === "/offer") return null;
+  // Hide navbar on the root and offer pages to maximize conversion for incoming traffic
+  if (pathname === "/" || pathname === "/offer") return null;
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md">
