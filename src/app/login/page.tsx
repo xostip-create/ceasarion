@@ -4,14 +4,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@/firebase";
-import { initiateEmailSignIn, initiateEmailSignUp } from "@/firebase/non-blocking-login";
+import { initiateEmailSignIn } from "@/firebase/non-blocking-login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Zap, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const auth = useAuth();
@@ -26,11 +25,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSignUp) {
-      initiateEmailSignUp(auth, email, password);
-    } else {
-      initiateEmailSignIn(auth, email, password);
-    }
+    initiateEmailSignIn(auth, email, password);
   };
 
   if (isUserLoading) {
@@ -49,10 +44,10 @@ export default function LoginPage() {
             <Zap className="text-white w-7 h-7" />
           </div>
           <CardTitle className="text-2xl font-headline font-bold">
-            {isSignUp ? "Create Admin Account" : "Admin Sign In"}
+            Admin Sign In
           </CardTitle>
           <CardDescription>
-            {isSignUp ? "Set up your arbitrage management console." : "Welcome back to your monetization hub."}
+            Welcome back to your monetization hub.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,18 +73,9 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full rounded-full h-12 font-bold shadow-lg shadow-primary/20">
-              {isSignUp ? "Get Started" : "Enter Console"}
+              Enter Console
             </Button>
           </form>
-          
-          <div className="mt-6 text-center">
-            <button 
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              {isSignUp ? "Already have an account? Sign In" : "Need an admin account? Create one"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>
