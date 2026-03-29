@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -106,13 +105,12 @@ const DEFAULT_TEMPLATE = `<article class="bg-white rounded-2xl shadow-sm border 
       A recent shift in federal guidelines is creating waves across the market, potentially offering significant relief for millions of families nationwide.
     </p>
     <p>
-      Industry experts suggest that these adjustments are designed to combat rising costs while providing a pathway for sustainable growth in the residential sector. Early reports indicate that early adopters of the tool below have seen the most benefit.
+      Industry experts suggest that these adjustments are designed to combat rising costs while providing a pathway for sustainable growth in the residential sector.
     </p>
   </div>
   
-  <div class="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center space-y-4">
-    <h2 class="text-xl font-bold text-blue-900 underline decoration-accent/30 underline-offset-4 italic">Check Your Eligibility Below</h2>
-    <p class="text-sm text-blue-700">Our free tool helps you determine if you qualify for the new rebate program in under 60 seconds. No obligation required.</p>
+  <div class="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-4">
+    <p class="text-sm text-slate-600">The information requested is available through the secure link below.</p>
   </div>
 </article>`;
 
