@@ -10,7 +10,6 @@ import {
   CardTitle, 
 } from "@/components/ui/card";
 import { 
-  TrendingUp, 
   Users, 
   MousePointer2, 
   ShieldAlert,
@@ -86,7 +85,6 @@ export default function Dashboard() {
 
     const totalImpressions = impressions.length;
     const totalClicks = clicks.length;
-    const revenue = (totalClicks * 0.12) + (totalImpressions / 1000 * 0.45);
     const detected = impressions.filter(i => i.adblockerStatus === 'detected').length;
     const rate = totalImpressions > 0 ? (detected / totalImpressions * 100).toFixed(1) : "0.0";
 
@@ -116,12 +114,10 @@ export default function Dashboard() {
     return {
       impressions: totalImpressions > 1000 ? `${(totalImpressions / 1000).toFixed(1)}K` : totalImpressions.toString(),
       clicks: totalClicks.toLocaleString(),
-      revenue: `$${revenue.toFixed(2)}`,
       optimizedRate: `${rate}%`,
       trends: {
         impressions: getTrend(currentImps, previousImps),
         clicks: getTrend(currentClicks, previousClicks),
-        revenue: getTrend(currentClicks, previousClicks),
         optimizedRate: getTrend(currentImps, previousImps)
       }
     };
@@ -181,17 +177,16 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Real-time performance metrics for your hardcoded offer page.</p>
           </div>
           <Button asChild className="rounded-full h-11 px-6 shadow-lg shadow-primary/20">
-            <a href="/offer" target="_blank">Test Landing Page <ExternalLink className="w-4 h-4 ml-2" /></a>
+            <a href="/" target="_blank">Test Landing Page <ExternalLink className="w-4 h-4 ml-2" /></a>
           </Button>
         </div>
 
         <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { label: "Total Impressions", value: stats?.impressions || "0", trend: stats?.trends.impressions || "0%", icon: <Users className="text-primary" /> },
               { label: "Optimized Rate", value: stats?.optimizedRate || "0%", trend: stats?.trends.optimizedRate || "0%", icon: <ShieldAlert className="text-accent" /> },
               { label: "Total Clicks", value: stats?.clicks || "0", trend: stats?.trends.clicks || "0%", icon: <MousePointer2 className="text-primary" /> },
-              { label: "Est. Revenue", value: stats?.revenue || "$0.00", trend: stats?.trends.revenue || "0%", icon: <TrendingUp className="text-green-500" /> },
             ].map((stat, i) => (
               <Card key={i} className="border-none shadow-sm">
                 <CardContent className="p-6">
