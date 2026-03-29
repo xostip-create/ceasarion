@@ -9,12 +9,36 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, MousePointer2, Zap, Save, Loader2, ExternalLink, Globe, ShieldX, Plus, Trash2, Layout } from "lucide-react";
+import { 
+  Users, 
+  MousePointer2, 
+  Zap, 
+  Save, 
+  Loader2, 
+  ExternalLink, 
+  Globe, 
+  ShieldX, 
+  Plus, 
+  Trash2, 
+  Layout,
+  RotateCcw
+} from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
-import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { setDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const trafficChartConfig = {
   impressions: { label: "Impressions", color: "hsl(var(--chart-1))" },
@@ -119,6 +143,20 @@ export default function Dashboard() {
     }));
   }, [impressions, clicks]);
 
+  const handleResetMetrics = () => {
+    if (!db || !user || !impressions || !clicks) return;
+
+    // Delete all impression events
+    impressions.forEach(imp => {
+      deleteDocumentNonBlocking(doc(db, "users", user.uid, "adImpressionEvents", imp.id));
+    });
+
+    // Delete all click events
+    clicks.forEach(click => {
+      deleteDocumentNonBlocking(doc(db, "users", user.uid, "adClickEvents", click.id));
+    });
+  };
+
   if (isUserLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   if (!user) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
@@ -137,9 +175,33 @@ export default function Dashboard() {
             <h1 className="text-3xl font-headline font-bold text-primary">Arbitrage Control</h1>
             <p className="text-muted-foreground">Manage your Adsterra scripts and real-time performance.</p>
           </div>
-          <Button asChild className="rounded-full h-11 px-6 shadow-lg shadow-primary/20">
-            <a href="/" target="_blank">Test Landing Page <ExternalLink className="w-4 h-4 ml-2" /></a>
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="rounded-full h-11 px-6 border-destructive text-destructive hover:bg-destructive hover:text-white transition-all">
+                  <RotateCcw className="w-4 h-4 mr-2" /> Reset Metrics
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="rounded-2xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete all recorded impressions and click data for this account. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleResetMetrics} className="rounded-full bg-destructive text-white hover:bg-destructive/90">
+                    Yes, Reset Data
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button asChild className="rounded-full h-11 px-6 shadow-lg shadow-primary/20">
+              <a href="/" target="_blank">Test Landing Page <ExternalLink className="w-4 h-4 ml-2" /></a>
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
