@@ -55,14 +55,12 @@ export default function HardcodedOfferPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-body antialiased flex flex-col items-center">
-      <div className="w-full flex justify-center pt-6 pointer-events-none sticky top-0 z-50">
-        <BrowserDetector onDetect={setDetection} />
-      </div>
+      <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-xl px-4 py-12 space-y-12 flex-1 flex flex-col justify-center">
-        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-white p-8 md:p-14 text-center space-y-10">
+      <main className="container mx-auto max-w-xl px-4 py-2 space-y-2 flex-1 flex flex-col">
+        <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-white p-2 md:p-4 text-center space-y-2 transition-all duration-700">
           <div className="flex justify-center">
-             <div className="relative w-24 h-24 mb-2">
+             <div className="relative w-12 h-12 mb-0.5">
               {logo && (
                 <Image 
                   src={logo.imageUrl} 
@@ -75,42 +73,42 @@ export default function HardcodedOfferPage() {
             </div>
           </div>
           
-          <div className="space-y-3">
-            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome</h1>
-            <p className="text-slate-500 text-lg font-medium leading-relaxed max-w-sm mx-auto">
+          <div className="space-y-1">
+            <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">Welcome</h1>
+            <p className="text-slate-500 text-xs font-medium leading-relaxed max-w-xs mx-auto">
               Please complete this quick verification to access your content.
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-2">
             <Button 
               onClick={handleAdClick} 
               size="lg" 
-              className="w-full h-16 rounded-3xl text-xl font-bold shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] active:scale-[0.97] bg-primary"
+              className="w-full h-10 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] bg-primary"
             >
               Verify & Continue
-              <ArrowRight className="ml-2 w-6 h-6" />
+              <ArrowRight className="ml-2 w-3 h-3" />
             </Button>
             <div className="flex items-center justify-center gap-2">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-widest text-center">Connection Verified</p>
+              <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+              <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest text-center">Connection Verified</p>
             </div>
           </div>
         </div>
 
-        <section id="ad-unit" className="space-y-8">
-           <div className="flex items-center gap-6">
+        <section id="ad-unit" className="space-y-2">
+           <div className="flex items-center gap-2">
              <div className="h-px bg-slate-200 flex-1" />
-             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.4em]">Sponsored</span>
+             <span className="text-[7px] text-slate-400 font-bold uppercase tracking-[0.2em]">Sponsored</span>
              <div className="h-px bg-slate-200 flex-1" />
           </div>
-          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-2 border border-white/50">
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-0.5 border border-white/50">
             <AdRenderer detection={detection} onAdClick={handleAdClick} />
           </div>
         </section>
 
-        <footer className="pt-16 pb-12 text-center space-y-4">
-          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-[0.3em]">© {new Date().getFullYear()} Distribution Hub</p>
+        <footer className="pt-4 pb-6 text-center">
+          <p className="text-[7px] text-slate-300 font-bold uppercase tracking-[0.1em]">© {new Date().getFullYear()} Content Distribution Hub</p>
         </footer>
       </main>
     </div>

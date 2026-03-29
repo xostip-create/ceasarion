@@ -1,7 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, use } from "react";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
@@ -9,15 +9,15 @@ import { BrowserDetector, DetectionResult } from "@/components/browser-detector"
 import { AdRenderer } from "@/components/ad-renderer";
 import { Loader2, AlertCircle } from "lucide-react";
 
-export default function CampaignLandingPage() {
-  const { slug } = useParams();
+export default function CampaignLandingPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [recorded, setRecorded] = useState(false);
 
   const campaignRef = useMemoFirebase(() => {
     if (!db || !slug) return null;
-    return doc(db, "public_landing_pages", slug as string);
+    return doc(db, "public_landing_pages", slug);
   }, [db, slug]);
 
   const { data: page, isLoading, error } = useDoc(campaignRef);
@@ -55,11 +55,9 @@ export default function CampaignLandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-body antialiased">
-      <div className="sticky top-0 z-50 w-full flex justify-center pt-4 pointer-events-none">
-        <BrowserDetector onDetect={setDetection} />
-      </div>
+      <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-10">
+      <main className="container mx-auto max-w-2xl px-4 py-2 space-y-4">
         <div className="prose prose-slate max-w-none" dangerouslySetInnerHTML={{ __html: page.htmlContent }} />
 
         <section id="ad-unit" className="relative">
@@ -69,7 +67,7 @@ export default function CampaignLandingPage() {
           <AdRenderer detection={detection} onAdClick={handleAdClick} />
         </section>
 
-        <footer className="pt-16 pb-12 text-center space-y-4">
+        <footer className="pt-8 pb-12 text-center space-y-4">
           <p className="text-[9px] text-muted-foreground/30 uppercase tracking-[0.2em]">Powered by Ceasarion Dynamic Ad Bridge</p>
         </footer>
       </main>
