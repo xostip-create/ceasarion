@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, MousePointer2, ShieldAlert, Zap, Save, Loader2, ExternalLink, Globe, ShieldX, Plus, Trash2 } from "lucide-react";
+import { Users, MousePointer2, Zap, Save, Loader2, ExternalLink, Globe, ShieldX, Plus, Trash2, Layout } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, doc, setDoc } from "firebase/firestore";
+import { collection, query, doc } from "firebase/firestore";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const trafficChartConfig = {
@@ -29,6 +29,7 @@ export default function Dashboard() {
   const [smartLink, setSmartLink] = useState("");
   const [popUnderScript, setPopUnderScript] = useState("");
   const [nativeBannerScript, setNativeBannerScript] = useState("");
+  const [socialBarScript, setSocialBarScript] = useState("");
   const [aggressiveBrowsers, setAggressiveBrowsers] = useState<string[]>([]);
   const [newBrowser, setNewBrowser] = useState("");
 
@@ -37,13 +38,14 @@ export default function Dashboard() {
     return doc(db, "users", user.uid, "adConfig", "settings");
   }, [db, user]);
 
-  const { data: remoteConfig, isLoading: isConfigLoading } = useDoc(configRef);
+  const { data: remoteConfig } = useDoc(configRef);
 
   useEffect(() => {
     if (remoteConfig) {
       setSmartLink(remoteConfig.smartLink || "");
       setPopUnderScript(remoteConfig.popUnderScript || "");
       setNativeBannerScript(remoteConfig.nativeBannerScript || "");
+      setSocialBarScript(remoteConfig.socialBarScript || "");
       setAggressiveBrowsers(remoteConfig.aggressiveBrowsers || ["Brave", "Firefox", "DuckDuckGo"]);
     }
   }, [remoteConfig]);
@@ -54,14 +56,13 @@ export default function Dashboard() {
       smartLink,
       popUnderScript,
       nativeBannerScript,
+      socialBarScript,
       aggressiveBrowsers,
       updatedAt: new Date().toISOString()
     };
     
-    // Save to private settings
     setDocumentNonBlocking(doc(db, "users", user.uid, "adConfig", "settings"), data, { merge: true });
     
-    // Sync to public landing page config
     setDocumentNonBlocking(doc(db, "public_landing_pages", "main"), {
       id: "home-offer",
       name: "Main Offer",
@@ -119,7 +120,13 @@ export default function Dashboard() {
   }, [impressions, clicks]);
 
   if (isUserLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
-  if (!user) return <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center"><ShieldAlert className="w-16 h-16 text-muted-foreground mb-4" /><h2 className="text-2xl font-bold mb-4">Admin Session Required</h2><Button asChild className="rounded-full px-8"><a href="/login">Sign In</a></Button></div>;
+  if (!user) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+      <Zap className="w-16 h-16 text-muted-foreground mb-4" />
+      <h2 className="text-2xl font-bold mb-4">Admin Session Required</h2>
+      <Button asChild className="rounded-full px-8"><a href="/login">Sign In</a></Button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -184,12 +191,12 @@ export default function Dashboard() {
               <div className="lg:col-span-2 space-y-6">
                 <Card className="border-none shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Core Links</CardTitle>
-                    <CardDescription>Primary targets for standard browser traffic.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Globe className="w-5 h-5 text-primary" /> Core Target</CardTitle>
+                    <CardDescription>Primary redirect link for standard traffic.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold">Smart Link URL (Main Target)</label>
+                      <label className="text-sm font-bold">Smart Link URL</label>
                       <Input placeholder="https://adsterra.com/smartlink/..." value={smartLink} onChange={e => setSmartLink(e.target.value)} />
                     </div>
                   </CardContent>
@@ -197,17 +204,21 @@ export default function Dashboard() {
 
                 <Card className="border-none shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><Zap className="w-5 h-5 text-accent" /> Adsterra Fallbacks</CardTitle>
-                    <CardDescription>Scripts injected based on environmental detection.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><Layout className="w-5 h-5 text-accent" /> Adsterra Formats</CardTitle>
+                    <CardDescription>Paste your script codes below.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold">Pop-under Script</label>
-                      <Textarea placeholder="Paste Adsterra Pop-under code here..." className="font-code text-xs min-h-[120px]" value={popUnderScript} onChange={e => setPopUnderScript(e.target.value)} />
+                      <Textarea placeholder="Paste Pop-under code..." className="font-code text-xs min-h-[100px]" value={popUnderScript} onChange={e => setPopUnderScript(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold">Native Banner Script</label>
-                      <Textarea placeholder="Paste Adsterra Native Banner code here..." className="font-code text-xs min-h-[120px]" value={nativeBannerScript} onChange={e => setNativeBannerScript(e.target.value)} />
+                      <Textarea placeholder="Paste Native Banner code..." className="font-code text-xs min-h-[100px]" value={nativeBannerScript} onChange={e => setNativeBannerScript(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold">Social Bar Script</label>
+                      <Textarea placeholder="Paste Social Bar code..." className="font-code text-xs min-h-[100px]" value={socialBarScript} onChange={e => setSocialBarScript(e.target.value)} />
                     </div>
                   </CardContent>
                 </Card>
@@ -216,8 +227,8 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <Card className="border-none shadow-sm">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><ShieldX className="w-5 h-5 text-destructive" /> Aggressive Browsers</CardTitle>
-                    <CardDescription>Trigger fallbacks for these browsers.</CardDescription>
+                    <CardTitle className="flex items-center gap-2"><ShieldX className="w-5 h-5 text-destructive" /> Aggressive Detection</CardTitle>
+                    <CardDescription>Trigger fallback scripts for these browsers.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex flex-wrap gap-2">

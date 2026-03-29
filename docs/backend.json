@@ -19,6 +19,10 @@
           "type": "string",
           "description": "The HTML/JS script for the Native Banner ad format."
         },
+        "socialBarScript": {
+          "type": "string",
+          "description": "The HTML/JS script for the Social Bar ad format."
+        },
         "aggressiveBrowsers": {
           "type": "array",
           "items": {
