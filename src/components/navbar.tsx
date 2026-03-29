@@ -19,8 +19,8 @@ export function Navbar() {
     router.push("/");
   };
 
-  // Hide navbar on campaign pages to maximize conversion
-  if (pathname?.startsWith("/l/")) return null;
+  // Hide navbar on the promotion page to maximize conversion
+  if (pathname === "/offer") return null;
 
   return (
     <nav className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md">
@@ -39,7 +39,7 @@ export function Navbar() {
                Dashboard
             </Link>
           )}
-          <Link href="/#solutions" className="text-sm font-medium hover:text-primary transition-colors">Solutions</Link>
+          <Link href="/offer" className={`text-sm font-medium transition-colors ${pathname === "/offer" ? "text-primary font-bold" : "hover:text-primary"}`}>Demo Page</Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -49,10 +49,6 @@ export function Navbar() {
             </Button>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                 <span className="w-2 h-2 bg-green-500 rounded-full" />
-                 Connected
-              </div>
               <Button variant="ghost" size="icon" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
                 <LogOut className="w-5 h-5" />
               </Button>
