@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect } from "react";
 import { Navbar } from "@/components/navbar";
 import { 
   Card, 
@@ -32,7 +32,8 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, doc, setDoc } from "firebase/firestore";
+import { collection, query, doc } from "firebase/firestore";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const trafficChartConfig = {
   impressions: {
@@ -59,7 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (user && db) {
       const configRef = doc(db, "public_landing_pages", "main");
-      setDoc(configRef, { 
+      setDocumentNonBlocking(configRef, { 
         ownerId: user.uid, 
         id: "main-promo",
         name: "Main Offer Page" 

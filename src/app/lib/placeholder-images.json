@@ -18,6 +18,12 @@
       "description": "Modern web browser logos collection",
       "imageUrl": "https://picsum.photos/seed/ceasarion-3/600/400",
       "imageHint": "web browsers"
+    },
+    {
+      "id": "news-hero",
+      "description": "Professional news article featured image",
+      "imageUrl": "https://picsum.photos/seed/fb-news-1/800/450",
+      "imageHint": "news media"
     }
   ]
 }
