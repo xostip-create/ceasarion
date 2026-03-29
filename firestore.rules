@@ -1,28 +1,5 @@
 /**
  * Ceasarion: Ad Arbitrage Middleman Security Rules
- *
- * Core Philosophy:
- * This ruleset implements a strict ownership-based model for administrative data while 
- * providing globally accessible read-only paths for client-side ad delivery. Private 
- * management data (Landing Pages, Campaigns, Analytics) is stored under the user's 
- * unique identifier path, ensuring a hard boundary between different tenants.
- *
- * Data Structure:
- * - /users/{userId}: The root of the administrative hierarchy.
- * - /users/{userId}/landingPages/...: Private configurations for the admin dashboard.
- * - /users/{userId}/adImpressionEvents/...: Analytics data (publicly writable, owner readable).
- * - /public_landing_pages/{slug}: Denormalized, publicly readable landing page data.
- * - /public_ad_configurations/{id}: Denormalized, publicly readable ad scripts and rules.
- *
- * Key Security Decisions:
- * 1. Path-Based Authorization: Most administrative access is granted by comparing 
- *    the {userId} in the path directly to the request.auth.uid, providing O(1) performance.
- * 2. Structural Segregation: Public traffic and private management are handled in separate 
- *    top-level collections to prevent accidental exposure of administrative settings.
- * 3. Analytics Sinkhole: Event collections allow public creation (to record traffic data) 
- *    but restrict reading and listing to the owner.
- * 4. Denormalization for Authorization: Public collections include an 'ownerId' field 
- *    to allow owners to manage their public-facing data without complex lookups.
  */
 
 rules_version = '2';
@@ -33,83 +10,37 @@ service cloud.firestore {
      * Global Helper Functions
      */
     
-    // Checks if the user is authenticated.
     function isSignedIn() {
       return request.auth != null;
     }
 
-    // Checks if the user's UID matches the provided ID (usually from path).
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Checks if the existing document belongs to the authenticated user.
     function isExistingOwner(ownerId) {
       return isSignedIn() && resource != null && request.auth.uid == ownerId;
     }
 
     /**
      * @description Rules for the root User document.
-     * @path /users/{userId}
-     * @allow (create, get, list, update) if the auth UID matches the userId.
-     * @deny (create, read) if the auth UID does not match the document ID.
-     * @principle Ownership (Self-Creation & Management).
      */
     match /users/{userId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
 
       /**
-       * @description Rules for private Landing Page configurations.
-       * @path /users/{userId}/landingPages/{landingPageId}
-       * @allow (create, update, delete) if the auth UID matches the parent userId.
-       * @deny (list) if requesting a collection not owned by the user.
-       * @principle Ownership (Hierarchical).
+       * @description Rules for private Ad Configuration settings.
+       * @path /users/{userId}/adConfig/{configId}
        */
-      match /landingPages/{landingPageId} {
+      match /adConfig/{configId} {
         allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.id == landingPageId;
-        allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-        allow delete: if isExistingOwner(userId);
-
-        /**
-         * @description Rules for Ad Campaigns within a Landing Page.
-         * @path /users/{userId}/landingPages/{landingPageId}/adCampaigns/{campaignId}
-         * @allow (create) if path userId matches and ID matches data.
-         * @deny (update) if attempting to change the parent landingPageId reference.
-         * @principle Ownership & Relational Integrity.
-         */
-        match /adCampaigns/{campaignId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.id == campaignId;
-          allow update: if isExistingOwner(userId) && request.resource.data.landingPageId == resource.data.landingPageId;
-          allow delete: if isExistingOwner(userId);
-
-          /**
-           * @description Rules for specific Ad Slot Configurations.
-           * @path /users/{userId}/landingPages/{landingPageId}/adCampaigns/{campaignId}/adSlotConfigurations/{adSlotConfigurationId}
-           * @allow (read, write) if user owns the parent tree.
-           * @deny (write) if UID is mismatched.
-           * @principle Ownership.
-           */
-          match /adSlotConfigurations/{adSlotConfigurationId} {
-            allow get, list: if isOwner(userId);
-            allow create: if isOwner(userId) && request.resource.data.id == adSlotConfigurationId;
-            allow update: if isExistingOwner(userId) && request.resource.data.campaignId == resource.data.campaignId;
-            allow delete: if isExistingOwner(userId);
-          }
-        }
+        allow create, update, delete: if isOwner(userId);
       }
 
       /**
        * @description Rules for Ad Impression Events (Analytics).
-       * @path /users/{userId}/adImpressionEvents/{impressionId}
-       * @allow (create) by anyone (public traffic).
-       * @allow (read, list) only by the owner of the analytics bucket.
-       * @deny (update, delete) if user is not the owner.
-       * @principle Public Write/Private Read.
        */
       match /adImpressionEvents/{impressionId} {
         allow create: if true;
@@ -119,10 +50,6 @@ service cloud.firestore {
 
       /**
        * @description Rules for Ad Click Events (Analytics).
-       * @path /users/{userId}/adClickEvents/{clickId}
-       * @allow (create) by anyone (public traffic).
-       * @allow (read, list) only by the owner of the analytics bucket.
-       * @principle Public Write/Private Read.
        */
       match /adClickEvents/{clickId} {
         allow create: if true;
@@ -133,28 +60,8 @@ service cloud.firestore {
 
     /**
      * @description Rules for publicly accessible Landing Page content.
-     * @path /public_landing_pages/{landingPageSlug}
-     * @allow (read) by anyone (unauthenticated traffic).
-     * @allow (write) only by the owner identified in the document field.
-     * @deny (write) if the ownerId field is missing or mismatched.
-     * @principle Public Read with Owner-Only Writes.
      */
     match /public_landing_pages/{landingPageSlug} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Rules for publicly accessible Ad Configurations.
-     * @path /public_ad_configurations/{adSlotConfigurationId}
-     * @allow (read) by anyone (unauthenticated traffic).
-     * @allow (write) only by the owner identified in the document field.
-     * @deny (write) if the ownerId field is missing or mismatched.
-     * @principle Public Read with Owner-Only Writes.
-     */
-    match /public_ad_configurations/{adSlotConfigurationId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
       allow update: if isExistingOwner(resource.data.ownerId);
