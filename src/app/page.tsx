@@ -95,13 +95,32 @@ export default function Home() {
     };
   }, [isAggressive, adConfig, injectScript]);
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
+  // Loader state: wait for both config and detection
+  if (isLoading || !detection) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 transition-opacity duration-500">
+       <div className="relative w-16 h-16 mb-6">
+          {logo && (
+            <Image 
+              src={logo.imageUrl} 
+              alt="Loading" 
+              fill 
+              className="object-contain animate-pulse opacity-40" 
+              data-ai-hint={logo.imageHint}
+            />
+          )}
+       </div>
+       <div className="flex flex-col items-center gap-3">
+         <Loader2 className="w-5 h-5 text-primary animate-spin" />
+         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Establishing Secure Connection</p>
+       </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 font-body antialiased flex flex-col items-center">
       <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-xl px-4 pt-2 pb-8 space-y-2 flex-1 flex flex-col">
+      <main className="container mx-auto max-w-xl px-4 pt-1 pb-8 space-y-2 flex-1 flex flex-col">
         <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/40 border border-white p-2 md:p-4 text-center space-y-2 transition-all duration-700">
           <div className="flex justify-center">
             <div className="relative w-12 h-12 mb-0.5">
