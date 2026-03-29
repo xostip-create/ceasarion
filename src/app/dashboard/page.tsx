@@ -34,13 +34,12 @@ import {
   Line, 
   LineChart, 
   ResponsiveContainer, 
-  Tooltip, 
   XAxis, 
   YAxis,
   CartesianGrid,
   Cell
 } from "recharts";
-import { ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, query, doc } from "firebase/firestore";
@@ -75,6 +74,23 @@ const browserData = [
   { name: "Edge", value: 10, color: "hsl(var(--chart-4))" },
   { name: "Others", value: 5, color: "hsl(var(--chart-5))" },
 ];
+
+const trafficChartConfig = {
+  impressions: {
+    label: "Impressions",
+    color: "hsl(var(--chart-1))",
+  },
+  clicks: {
+    label: "Clicks",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig;
+
+const browserChartConfig = {
+  value: {
+    label: "Traffic Share",
+  },
+} satisfies ChartConfig;
 
 const DEFAULT_TEMPLATE = `<article class="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
   <header class="space-y-4">
@@ -273,18 +289,16 @@ export default function Dashboard() {
                   <CardTitle>Daily Traffic Performance</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={mockLineData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
-                        <Tooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="impressions" stroke="hsl(var(--chart-1))" strokeWidth={3} dot={false} />
-                        <Line type="monotone" dataKey="clicks" stroke="hsl(var(--chart-2))" strokeWidth={3} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <ChartContainer config={trafficChartConfig} className="h-[300px] w-full">
+                    <LineChart data={mockLineData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--muted))" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line type="monotone" dataKey="impressions" stroke="var(--color-impressions)" strokeWidth={3} dot={false} />
+                      <Line type="monotone" dataKey="clicks" stroke="var(--color-clicks)" strokeWidth={3} dot={false} />
+                    </LineChart>
+                  </ChartContainer>
                 </CardContent>
               </Card>
 
@@ -294,19 +308,17 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    <div className="h-[200px]">
-                       <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={browserData} layout="vertical">
-                             <XAxis type="number" hide />
-                             <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} width={70} />
-                             <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                               {browserData.map((entry, index) => (
-                                 <Cell key={`cell-${index}`} fill={entry.color} />
-                               ))}
-                             </Bar>
-                          </BarChart>
-                       </ResponsiveContainer>
-                    </div>
+                    <ChartContainer config={browserChartConfig} className="h-[200px] w-full">
+                      <BarChart data={browserData} layout="vertical">
+                         <XAxis type="number" hide />
+                         <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--muted-foreground))', fontSize: 12}} width={70} />
+                         <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                           {browserData.map((entry, index) => (
+                             <Cell key={`cell-${index}`} fill={entry.color} />
+                           ))}
+                         </Bar>
+                      </BarChart>
+                    </ChartContainer>
                     <div className="space-y-2">
                        <div className="flex items-center justify-between text-sm">
                           <span className="flex items-center gap-2"><Smartphone className="w-4 h-4" /> Mobile Traffic</span>
