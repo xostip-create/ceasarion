@@ -15,56 +15,68 @@ interface AdRendererProps {
 
 export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRendererProps) {
   const [isInjecting, setIsInjecting] = useState(false);
-  const adContainerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (!nativeScript || !adContainerRef.current) {
+    if (!nativeScript || !iframeRef.current) {
       if (onReady) onReady();
       return;
     }
 
     setIsInjecting(true);
-    const container = adContainerRef.current;
     
+    // Construct a standalone HTML document for the iframe.
+    // This creates a completely isolated environment for the ad script to run.
+    const adDocument = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body { 
+              margin: 0; 
+              padding: 0; 
+              overflow: hidden; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+              min-height: 120px;
+              background: transparent;
+              font-family: sans-serif;
+            }
+            #ad-wrapper { width: 100%; display: flex; justify-content: center; }
+            * { max-width: 100% !important; }
+          </style>
+        </head>
+        <body>
+          <div id="ad-wrapper">
+            ${nativeScript}
+          </div>
+          <script>
+            // Notify parent if the ad script finishes or fails (optional)
+            window.onerror = function() {
+              console.log('Ad script error caught in isolated environment');
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
     try {
-      // Clear previous content completely
-      container.innerHTML = ""; 
-      
-      // Use Range API to create a contextual fragment which handles scripts better
-      const range = document.createRange();
-      const fragment = range.createContextualFragment(nativeScript);
-      
-      // Find all scripts in the fragment and replace them with executable script elements
-      const scripts = Array.from(fragment.querySelectorAll("script"));
-      scripts.forEach(oldScript => {
-        const newScript = document.createElement("script");
-        
-        // Copy all attributes (src, async, data-*, etc.)
-        Array.from(oldScript.attributes).forEach(attr => {
-          newScript.setAttribute(attr.name, attr.value);
-        });
-        
-        // Copy inline script content if present
-        if (oldScript.innerHTML) {
-          newScript.innerHTML = oldScript.innerHTML;
-        }
-        
-        // Replace the non-executing script tag with our new executable one
-        oldScript.parentNode?.replaceChild(newScript, oldScript);
-      });
-      
-      // Append the processed fragment to our container
-      container.appendChild(fragment);
+      // Use srcdoc to inject the full HTML environment instantly.
+      // This is superior to manual DOM manipulation for third-party scripts.
+      iframeRef.current.srcdoc = adDocument;
     } catch (e) {
-      // Silent fail for ad injection issues to avoid breaking the UX
-    } finally {
-      // Small delay to ensure browser handles the fragment before clearing the loader
-      const timer = setTimeout(() => {
-        setIsInjecting(false);
-        if (onReady) onReady();
-      }, 300);
-      return () => clearTimeout(timer);
+      // Silent fail
     }
+
+    const timer = setTimeout(() => {
+      setIsInjecting(false);
+      if (onReady) onReady();
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, [nativeScript, onReady]);
 
   if (!detection) return (
@@ -82,13 +94,21 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
             {isInjecting && <Loader2 className="w-3 h-3 animate-spin" />}
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4">
-          <div ref={adContainerRef} className="min-h-[100px] flex items-center justify-center text-slate-300">
-             {!nativeScript && (
-               <div className="flex flex-col items-center gap-2 opacity-20">
+        <CardContent className="p-0">
+          <div className="relative w-full min-h-[140px] flex items-center justify-center">
+             {!nativeScript ? (
+               <div className="flex flex-col items-center gap-2 opacity-20 p-8">
                  <ImageIcon className="w-8 h-8" />
                  <p className="text-[10px]">Premium content loading...</p>
                </div>
+             ) : (
+               <iframe
+                 ref={iframeRef}
+                 className="w-full border-none min-h-[140px]"
+                 title="Advertisement"
+                 sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                 scrolling="no"
+               />
              )}
           </div>
         </CardContent>
