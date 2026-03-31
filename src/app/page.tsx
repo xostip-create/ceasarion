@@ -8,10 +8,11 @@ import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { cn } from "@/lib/utils";
 
 const NESTLE_QUESTIONS = [
   "How often do you consume Nestlé products in your household?",
@@ -41,6 +42,7 @@ export default function NestleSurveyPage() {
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10);
 
   const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
 
@@ -51,6 +53,20 @@ export default function NestleSurveyPage() {
 
   const { data: config } = useDoc(configRef);
   const adConfig = config?.adConfig;
+
+  // Reset timer on step change
+  useEffect(() => {
+    setTimeLeft(10);
+  }, [currentStep]);
+
+  // Countdown logic
+  useEffect(() => {
+    if (timeLeft <= 0 || isCompleted) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft, isCompleted]);
 
   // Track impressions per step
   useEffect(() => {
@@ -67,6 +83,8 @@ export default function NestleSurveyPage() {
   }, [config, detection, db, currentStep]);
 
   const handleNext = () => {
+    if (timeLeft > 0) return;
+    
     if (currentStep < NESTLE_QUESTIONS.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
@@ -125,13 +143,26 @@ export default function NestleSurveyPage() {
               {["Very Frequently", "Sometimes", "Rarely", "Never / Not Interested"].map((option) => (
                 <button 
                   key={option}
-                  className="w-full p-4 text-left text-sm font-medium border rounded-2xl hover:bg-indigo-50 hover:border-primary transition-all active:scale-[0.98] outline-none"
+                  disabled={timeLeft > 0}
+                  className={cn(
+                    "w-full p-4 text-left text-sm font-medium border rounded-2xl transition-all active:scale-[0.98] outline-none",
+                    timeLeft > 0 
+                      ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" 
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-primary"
+                  )}
                   onClick={handleNext}
                 >
                   {option}
                 </button>
               ))}
             </div>
+
+            {timeLeft > 0 && (
+              <div className="flex items-center justify-center gap-2 text-primary animate-pulse py-2">
+                <Timer className="w-4 h-4" />
+                <span className="text-xs font-bold tracking-tight">Please wait {timeLeft}s to continue...</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -143,8 +174,6 @@ export default function NestleSurveyPage() {
           </div>
           
           <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-1 border border-white/50">
-            {/* Using key={currentStep} forces the AdRenderer to re-mount and re-inject 
-                the Adsterra script on every question transition, maximizing impressions. */}
             <AdRenderer 
               key={currentStep}
               detection={detection} 
