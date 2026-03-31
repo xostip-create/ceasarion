@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
@@ -99,6 +99,8 @@ export default function NestleSurveyPage() {
   const [timeLeft, setTimeLeft] = useState(3);
 
   const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
+  const questionCardRef = useRef<HTMLDivElement>(null);
+  const continueBtnRef = useRef<HTMLDivElement>(null);
 
   const configRef = useMemoFirebase(() => {
     if (!db) return null;
@@ -108,14 +110,11 @@ export default function NestleSurveyPage() {
   const { data: config } = useDoc(configRef);
   const adConfig = config?.adConfig;
 
-  // Reset selection and timer on step change
   useEffect(() => {
     setTimeLeft(3);
     setSelectedOption(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
-  // Countdown logic
   useEffect(() => {
     if (timeLeft <= 0 || isCompleted) return;
     const timer = setInterval(() => {
@@ -124,7 +123,6 @@ export default function NestleSurveyPage() {
     return () => clearInterval(timer);
   }, [timeLeft, isCompleted]);
 
-  // Track impressions per step
   useEffect(() => {
     if (config && detection && db) {
       const impressionRef = collection(db, "users", config.ownerId, "adImpressionEvents");
@@ -138,13 +136,26 @@ export default function NestleSurveyPage() {
     }
   }, [config, detection, db, currentStep]);
 
+  const handleOptionSelect = (option: string) => {
+    setSelectedOption(option);
+    // Auto scroll to the continue button area after selection
+    setTimeout(() => {
+      continueBtnRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
+
   const handleNext = () => {
     if (!selectedOption || timeLeft > 0) return;
     
     if (currentStep < NESTLE_SURVEY.length - 1) {
       setCurrentStep(prev => prev + 1);
+      // Auto scroll back to the question card
+      setTimeout(() => {
+        questionCardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
     } else {
       setIsCompleted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -175,8 +186,8 @@ export default function NestleSurveyPage() {
     <div className="min-h-screen bg-slate-50 font-body antialiased flex flex-col items-center pt-6 md:pt-10">
       <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-xl px-4 space-y-6 flex-1 flex flex-col pb-20">
-        <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white p-6 md:p-8 space-y-6">
+      <main className="container mx-auto max-w-xl px-4 space-y-6 flex-1 flex flex-col pb-24">
+        <div ref={questionCardRef} className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white p-6 md:p-8 space-y-6">
           <div className="flex justify-between items-center">
             <div className="relative w-12 h-12">
               {logo && (
@@ -214,7 +225,7 @@ export default function NestleSurveyPage() {
                       ? "bg-primary/10 border-primary text-primary" 
                       : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
                   )}
-                  onClick={() => setSelectedOption(option)}
+                  onClick={() => handleOptionSelect(option)}
                 >
                   {option}
                 </button>
@@ -240,7 +251,7 @@ export default function NestleSurveyPage() {
           </div>
         </section>
 
-        <div className="space-y-4">
+        <div ref={continueBtnRef} className="space-y-4">
           {selectedOption && (
             <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                <p className="text-[11px] font-extrabold text-primary uppercase tracking-[0.15em] flex items-center gap-1.5">
@@ -258,7 +269,7 @@ export default function NestleSurveyPage() {
             {timeLeft > 0 ? (
               <>
                 <Timer className="w-5 h-5 animate-pulse" />
-                Verifying {timeLeft}s
+                Wait {timeLeft}s
               </>
             ) : (
               <>
@@ -269,7 +280,7 @@ export default function NestleSurveyPage() {
           </Button>
           {!selectedOption && (
             <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Please select an answer to proceed
+              Please select an answer above to continue
             </p>
           )}
         </div>
