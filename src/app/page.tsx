@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -125,7 +125,7 @@ export default function NestleSurveyPage() {
               {["Very Frequently", "Sometimes", "Rarely", "Never / Not Interested"].map((option) => (
                 <button 
                   key={option}
-                  className="w-full p-4 text-left text-sm font-medium border rounded-2xl hover:bg-slate-50 hover:border-primary transition-all active:scale-[0.98]"
+                  className="w-full p-4 text-left text-sm font-medium border rounded-2xl hover:bg-indigo-50 hover:border-primary transition-all active:scale-[0.98] outline-none"
                   onClick={handleNext}
                 >
                   {option}
@@ -143,22 +143,14 @@ export default function NestleSurveyPage() {
           </div>
           
           <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-1 border border-white/50">
+            {/* Using key={currentStep} forces the AdRenderer to re-mount and re-inject 
+                the Adsterra script on every question transition, maximizing impressions. */}
             <AdRenderer 
+              key={currentStep}
               detection={detection} 
               onAdClick={() => {}} 
               nativeScript={adConfig?.nativeBannerScript}
             />
-          </div>
-
-          <div className="pt-2">
-            <Button 
-              onClick={handleNext} 
-              size="lg" 
-              className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] bg-primary hover:bg-primary/90"
-            >
-              {currentStep === NESTLE_QUESTIONS.length - 1 ? "Complete Survey" : "Continue to Next Question"}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
           </div>
         </section>
 
