@@ -15,26 +15,77 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { cn } from "@/lib/utils";
 
 const NESTLE_QUESTIONS = [
-  "How often do you consume Nestlé products in your household?",
-  "Which Nestlé coffee brand do you enjoy the most for your morning boost?",
-  "Does Maggi seasoning play a role in your signature family recipes?",
-  "Which of these Nestlé chocolates is your absolute go-to treat?",
-  "Have you explored Nestlé's range of plant-based milk alternatives?",
-  "How important is nutritional transparency when you choose Nestlé products?",
-  "Which Nestlé breakfast cereal starts your day most frequently?",
-  "Do you prefer Nescafé Classic or the Gold blend for your arrow coffee?",
-  "How would you rate Nestlé's commitment to sustainable packaging?",
-  "Which Nestlé bottled water brand do you trust for daily hydration?",
-  "Is MILO a staple beverage for active members in your family?",
-  "Which KitKat flavor variation are you most excited to try next?",
-  "How likely are you to recommend Nespresso to a fellow coffee lover?",
-  "Do you associate the Nestlé brand with high-quality dairy standards?",
-  "Which Nestlé ice cream brand is your preferred choice for summer?",
-  "Have you tried the new Nestlé health science wellness supplements?",
-  "How often do you use Nestlé Toll House morsels for your baking?",
-  "Which Nestlé infant nutrition product do you trust most?",
-  "Do you believe Nestlé provides good value for money across its range?",
-  "Would you like to receive exclusive Nestlé vouchers and product news?"
+  // Culinary (Maggi)
+  "How often do you use Maggi Star cubes for your daily cooking?",
+  "Have you tried the new Maggi Signature Jollof seasoning variant?",
+  "Do you prefer Maggi Chicken or Maggi Crayfish for traditional soups?",
+  "Is Maggi Naija Pot a staple in your kitchen pantry?",
+  "How would you rate the flavor intensity of Maggi Mi’py?",
+  "Does Maggi seasoning help you achieve the perfect taste in your family meals?",
+  "Do you use Maggi Signature sub-variants for special occasions?",
+  "How many Maggi cubes do you typically use for a pot of soup?",
+  "Do you believe Maggi is the most iconic seasoning brand in Nigeria?",
+  "Have you noticed Maggi's commitment to iron fortification in its cubes?",
+
+  // Beverages (Milo, Nescafé, Nido)
+  "Is Milo your first choice for a chocolate malt drink in the morning?",
+  "How often do you purchase Milo Ready-to-Drink (RTD) for your children?",
+  "Do you prefer the convenience of Milo 3-in-1 sachets?",
+  "Is Nescafé Classic your go-to coffee for a morning energy boost?",
+  "Have you tried the Nescafé 3-in-1 Malty variant?",
+  "Does Nido Fortified with FortiGrow provide the nutrition your children need?",
+  "How frequently do you enjoy a cup of Nescafé 3-in-1 Original?",
+  "Do you consider Milo a necessary energy food drink for active kids?",
+  "Is Nescafé RTD coffee a regular part of your busy workday?",
+  "How satisfied are you with the creamy taste of Nido milk?",
+  "Do you stock Milo Energy Food Drink in bulk for your household?",
+  "Does Nescafé help you stay productive throughout the afternoon?",
+  "Is Milo Powder in tins or sachets more convenient for your usage?",
+  "Do you believe Nido is the best milk for growing children?",
+  "How likely are you to recommend Milo to other parents?",
+
+  // Breakfast Cereals (Golden Morn, Fitness)
+  "How often does your family have Golden Morn for breakfast?",
+  "Do you prefer the maize and soya blend of Golden Morn?",
+  "Is Golden Morn the most trusted family cereal in your home?",
+  "Have you tried Nestlé Fitness cereal for a healthier breakfast option?",
+  "Do the economical Golden Morn sachets help with your monthly budget?",
+  "Is locally sourced maize in Golden Morn a reason why you buy it?",
+  "How would you rate the crunchiness of Nestlé Fitness cereal?",
+  "Do you enjoy Golden Morn with milk or as a dry snack?",
+  "Is Nestlé Fitness your preferred cereal for weight management?",
+  "Does Golden Morn provide enough energy to last until lunchtime?",
+
+  // Infant Nutrition (Cerelac, NAN, SMA, Lactogen)
+  "Is Cerelac your primary choice for your baby's first solid foods?",
+  "Which Cerelac flavor does your baby enjoy most (Wheat, Maize, Banana, or Honey)?",
+  "How often do you use NAN Optipro (1, 2, or 3) for your infant?",
+  "Does NAN Comfort help ease your baby's digestive sensitivity?",
+  "Is SMA Gold your trusted premium infant formula brand?",
+  "Have you used Lactogen 1 or 2 as a starter formula for your newborn?",
+  "Is Nutrend still a part of your weaning cereal routine?",
+  "Do you trust Nestlé infant nutrition for early childhood development?",
+  "Is the NAN Kid range suitable for your toddler's nutritional needs?",
+  "How satisfied are you with the quality of Cerelac infant cereals?",
+
+  // Bottled Water (Pure Life)
+  "Is Nestlé Pure Life your preferred brand for purified bottled water?",
+  "How often do you buy the 1.5L size of Nestlé Pure Life for home use?",
+  "Do you trust the safety and quality standards of Nestlé Pure Life?",
+  "Is the 60cl Nestlé Pure Life bottle your go-to for hydration on the move?",
+  "How would you rate the taste and purity of Nestlé Pure Life?",
+
+  // Confectionery & Dairy (Chocomilo, KitKat, Carnation)
+  "Is Chocomilo a favorite cocoa confectionery snack in your household?",
+  "How often do you treat yourself to a KitKat chocolate wafer bar?",
+  "Is Carnation Milk your first choice for baking and creamy desserts?",
+  "Do you use Carnation Milk as a whitener for your tea or coffee?",
+  "How would you rate the convenience of Chocomilo cubes as a snack?",
+  "Is KitKat widely available in the retail outlets where you shop?",
+  "Does Carnation Milk enhance the flavor of your signature recipes?",
+  "Is KitKat the best chocolate snack for a quick break?",
+  "How satisfied are you with the rich taste of Carnation dairy products?",
+  "Would you like to see more Nestlé confectionery options in Nigeria?"
 ];
 
 export default function NestleSurveyPage() {
@@ -102,7 +153,7 @@ export default function NestleSurveyPage() {
         <div className="bg-white p-10 rounded-[2.5rem] shadow-xl max-w-md w-full space-y-6">
           <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto" />
           <h1 className="text-2xl font-bold">Survey Complete!</h1>
-          <p className="text-muted-foreground">Thank you for your valuable feedback on Nestlé products. Your rewards are being processed.</p>
+          <p className="text-muted-foreground">Thank you for your valuable feedback on Nestlé Nigeria products. Your feedback helps us serve you better.</p>
           <Button className="w-full h-12 rounded-full font-bold" onClick={() => window.location.reload()}>Finish</Button>
         </div>
       </div>
@@ -129,7 +180,7 @@ export default function NestleSurveyPage() {
               )}
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Question {currentStep + 1} of 20</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Question {currentStep + 1} of {NESTLE_QUESTIONS.length}</p>
               <Progress value={progress} className="w-24 h-1.5 mt-1" />
             </div>
           </div>
@@ -140,7 +191,7 @@ export default function NestleSurveyPage() {
             </h2>
             
             <div className="grid grid-cols-1 gap-3">
-              {["Very Frequently", "Sometimes", "Rarely", "Never / Not Interested"].map((option) => (
+              {["Very Satisfied", "Satisfied", "Rarely / Neutral", "Not Interested"].map((option) => (
                 <button 
                   key={option}
                   disabled={timeLeft > 0}
@@ -160,7 +211,7 @@ export default function NestleSurveyPage() {
             {timeLeft > 0 && (
               <div className="flex items-center justify-center gap-2 text-primary animate-pulse py-2">
                 <Timer className="w-4 h-4" />
-                <span className="text-xs font-bold tracking-tight">Please wait {timeLeft}s to continue...</span>
+                <span className="text-xs font-bold tracking-tight">Please wait {timeLeft}s to unlock answer...</span>
               </div>
             )}
           </div>
@@ -184,7 +235,7 @@ export default function NestleSurveyPage() {
         </section>
 
         <footer className="text-center pt-4">
-          <p className="text-[8px] text-slate-300 font-bold uppercase tracking-[0.1em]">© {new Date().getFullYear()} Nestlé Consumer Insights Program</p>
+          <p className="text-[8px] text-slate-300 font-bold uppercase tracking-[0.1em]">© {new Date().getFullYear()} Nestlé Nigeria Consumer Insights</p>
         </footer>
       </main>
     </div>
