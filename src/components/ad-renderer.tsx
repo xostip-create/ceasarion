@@ -36,17 +36,19 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
           <style>
             body { 
               margin: 0; 
-              padding: 0; 
-              overflow: hidden; 
-              display: flex; 
-              justify-content: center; 
-              align-items: center; 
-              min-height: 120px;
+              padding: 8px; 
               background: transparent;
-              font-family: sans-serif;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              display: block;
             }
-            #ad-wrapper { width: 100%; display: flex; justify-content: center; }
-            * { max-width: 100% !important; }
+            #ad-wrapper { 
+              width: 100%; 
+              display: block;
+              overflow: hidden;
+            }
+            * { box-sizing: border-box; }
+            /* Force images within the ad to be responsive but not overflow */
+            img { max-width: 100%; height: auto; }
           </style>
         </head>
         <body>
@@ -54,7 +56,6 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
             ${nativeScript}
           </div>
           <script>
-            // Notify parent if the ad script finishes or fails (optional)
             window.onerror = function() {
               console.log('Ad script error caught in isolated environment');
             };
@@ -74,7 +75,7 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
     const timer = setTimeout(() => {
       setIsInjecting(false);
       if (onReady) onReady();
-    }, 600);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [nativeScript, onReady]);
@@ -95,16 +96,16 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="relative w-full min-h-[140px] flex items-center justify-center">
+          <div className="relative w-full min-h-[450px] flex items-start justify-center">
              {!nativeScript ? (
-               <div className="flex flex-col items-center gap-2 opacity-20 p-8">
+               <div className="flex flex-col items-center gap-2 opacity-20 p-8 pt-16">
                  <ImageIcon className="w-8 h-8" />
                  <p className="text-[10px]">Premium content loading...</p>
                </div>
              ) : (
                <iframe
                  ref={iframeRef}
-                 className="w-full border-none min-h-[140px]"
+                 className="w-full border-none min-h-[450px]"
                  title="Advertisement"
                  sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
                  scrolling="no"
