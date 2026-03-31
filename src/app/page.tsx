@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -7,7 +8,7 @@ import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -38,9 +39,7 @@ const NESTLE_QUESTIONS = [
 export default function NestleSurveyPage() {
   const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
-  const [recorded, setRecorded] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [adReady, setAdReady] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
   const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
@@ -69,16 +68,11 @@ export default function NestleSurveyPage() {
 
   const handleNext = () => {
     if (currentStep < NESTLE_QUESTIONS.length - 1) {
-      setAdReady(false);
       setCurrentStep(prev => prev + 1);
     } else {
       setIsCompleted(true);
     }
   };
-
-  const handleAdReady = useCallback(() => {
-    setAdReady(true);
-  }, []);
 
   const progress = useMemo(() => {
     return ((currentStep + 1) / NESTLE_QUESTIONS.length) * 100;
@@ -133,7 +127,6 @@ export default function NestleSurveyPage() {
                   key={option}
                   className="w-full p-4 text-left text-sm font-medium border rounded-2xl hover:bg-slate-50 hover:border-primary transition-all active:scale-[0.98]"
                   onClick={handleNext}
-                  disabled={!adReady}
                 >
                   {option}
                 </button>
@@ -154,23 +147,14 @@ export default function NestleSurveyPage() {
               detection={detection} 
               onAdClick={() => {}} 
               nativeScript={adConfig?.nativeBannerScript}
-              onReady={handleAdReady}
             />
           </div>
-
-          {!adReady && (
-            <div className="flex items-center justify-center gap-2 text-slate-400 py-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-xs font-medium">Verifying advertisement load...</span>
-            </div>
-          )}
 
           <div className="pt-2">
             <Button 
               onClick={handleNext} 
-              disabled={!adReady}
               size="lg" 
-              className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.99] bg-primary hover:bg-primary/90"
             >
               {currentStep === NESTLE_QUESTIONS.length - 1 ? "Complete Survey" : "Continue to Next Question"}
               <ArrowRight className="ml-2 w-5 h-5" />

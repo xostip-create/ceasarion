@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -16,9 +17,15 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
   const [isInjecting, setIsInjecting] = useState(false);
 
   useEffect(() => {
-    if (nativeScript) {
-      setIsInjecting(true);
-      const container = document.getElementById("native-ad-container");
+    if (!nativeScript) {
+      if (onReady) onReady();
+      return;
+    }
+
+    setIsInjecting(true);
+    const container = document.getElementById("native-ad-container");
+    
+    try {
       if (container) {
         container.innerHTML = ""; 
         
@@ -38,18 +45,16 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
         });
         
         container.appendChild(fragment);
-
-        // Simulate a small delay for the ad to actually fetch and render content
-        const timer = setTimeout(() => {
-          setIsInjecting(false);
-          if (onReady) onReady();
-        }, 2000);
-
-        return () => clearTimeout(timer);
       }
-    } else {
-      // If no script, we are ready immediately (but nothing will show)
-      if (onReady) onReady();
+    } catch (e) {
+      console.error("Ad injection failed", e);
+    } finally {
+      // Small delay to ensure browser handles the fragment
+      const timer = setTimeout(() => {
+        setIsInjecting(false);
+        if (onReady) onReady();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [nativeScript, onReady]);
 
