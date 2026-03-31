@@ -241,6 +241,15 @@ export default function NestleSurveyPage() {
         </section>
 
         <div className="space-y-4">
+          {selectedOption && (
+            <div className="flex flex-col items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+               <p className="text-[11px] font-extrabold text-primary uppercase tracking-[0.15em] flex items-center gap-1.5">
+                 <span className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+                 Ready! Click Continue below
+               </p>
+            </div>
+          )}
+
           <Button 
             onClick={handleNext}
             disabled={!selectedOption || timeLeft > 0}
