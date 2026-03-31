@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DetectionResult } from "./browser-detector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Image as ImageIcon, Loader2 } from "lucide-react";
@@ -15,45 +15,54 @@ interface AdRendererProps {
 
 export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRendererProps) {
   const [isInjecting, setIsInjecting] = useState(false);
+  const adContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!nativeScript) {
+    if (!nativeScript || !adContainerRef.current) {
       if (onReady) onReady();
       return;
     }
 
     setIsInjecting(true);
-    const container = document.getElementById("native-ad-container");
+    const container = adContainerRef.current;
     
     try {
-      if (container) {
-        container.innerHTML = ""; 
+      // Clear previous content completely
+      container.innerHTML = ""; 
+      
+      // Use Range API to create a contextual fragment which handles scripts better
+      const range = document.createRange();
+      const fragment = range.createContextualFragment(nativeScript);
+      
+      // Find all scripts in the fragment and replace them with executable script elements
+      const scripts = Array.from(fragment.querySelectorAll("script"));
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement("script");
         
-        const range = document.createRange();
-        const fragment = range.createContextualFragment(nativeScript);
-        
-        const scripts = Array.from(fragment.querySelectorAll("script"));
-        scripts.forEach(oldScript => {
-          const newScript = document.createElement("script");
-          Array.from(oldScript.attributes).forEach(attr => {
-            newScript.setAttribute(attr.name, attr.value);
-          });
-          if (oldScript.innerHTML) {
-            newScript.innerHTML = oldScript.innerHTML;
-          }
-          oldScript.parentNode?.replaceChild(newScript, oldScript);
+        // Copy all attributes (src, async, data-*, etc.)
+        Array.from(oldScript.attributes).forEach(attr => {
+          newScript.setAttribute(attr.name, attr.value);
         });
         
-        container.appendChild(fragment);
-      }
+        // Copy inline script content if present
+        if (oldScript.innerHTML) {
+          newScript.innerHTML = oldScript.innerHTML;
+        }
+        
+        // Replace the non-executing script tag with our new executable one
+        oldScript.parentNode?.replaceChild(newScript, oldScript);
+      });
+      
+      // Append the processed fragment to our container
+      container.appendChild(fragment);
     } catch (e) {
-      console.error("Ad injection failed", e);
+      // Silent fail for ad injection issues to avoid breaking the UX
     } finally {
-      // Small delay to ensure browser handles the fragment
+      // Small delay to ensure browser handles the fragment before clearing the loader
       const timer = setTimeout(() => {
         setIsInjecting(false);
         if (onReady) onReady();
-      }, 500);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [nativeScript, onReady]);
@@ -74,7 +83,7 @@ export function AdRenderer({ detection, onAdClick, nativeScript, onReady }: AdRe
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4">
-          <div id="native-ad-container" className="min-h-[100px] flex items-center justify-center text-slate-300">
+          <div ref={adContainerRef} className="min-h-[100px] flex items-center justify-center text-slate-300">
              {!nativeScript && (
                <div className="flex flex-col items-center gap-2 opacity-20">
                  <ImageIcon className="w-8 h-8" />
