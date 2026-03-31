@@ -22,7 +22,7 @@ const NESTLE_QUESTIONS = [
   "Have you explored Nestlé's range of plant-based milk alternatives?",
   "How important is nutritional transparency when you choose Nestlé products?",
   "Which Nestlé breakfast cereal starts your day most frequently?",
-  "Do you prefer Nescafé Classic or the Gold blend for your instant coffee?",
+  "Do you prefer Nescafé Classic or the Gold blend for your arrow coffee?",
   "How would you rate Nestlé's commitment to sustainable packaging?",
   "Which Nestlé bottled water brand do you trust for daily hydration?",
   "Is MILO a staple beverage for active members in your family?",
@@ -42,7 +42,7 @@ export default function NestleSurveyPage() {
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10);
+  const [timeLeft, setTimeLeft] = useState(5);
 
   const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
 
@@ -56,7 +56,7 @@ export default function NestleSurveyPage() {
 
   // Reset timer on step change
   useEffect(() => {
-    setTimeLeft(10);
+    setTimeLeft(5);
   }, [currentStep]);
 
   // Countdown logic
