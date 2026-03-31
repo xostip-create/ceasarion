@@ -7,20 +7,18 @@ import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { Loader2, AlertCircle } from "lucide-react";
 
 export default function HardcodedLandingPage() {
   const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [recorded, setRecorded] = useState(false);
 
-  // Look up the site owner UID from the 'main' public config
   const configRef = useMemoFirebase(() => {
     if (!db) return null;
     return doc(db, "public_landing_pages", "main");
   }, [db]);
 
-  const { data: config, isLoading } = useDoc(configRef);
+  const { data: config } = useDoc(configRef);
 
   useEffect(() => {
     if (config && detection && !recorded && db) {
@@ -49,15 +47,11 @@ export default function HardcodedLandingPage() {
     }
   };
 
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="w-10 h-10 text-primary animate-spin" /></div>;
-
   return (
     <div className="min-h-screen bg-slate-50 font-body antialiased">
-      <div className="sticky top-0 z-50 w-full flex justify-center pt-4 pointer-events-none">
-        <BrowserDetector onDetect={setDetection} />
-      </div>
+      <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-10">
+      <main className="container mx-auto max-w-2xl px-4 py-4 md:py-8 space-y-6">
         <article className="bg-white rounded-2xl shadow-sm border p-6 space-y-6">
           <header className="space-y-4">
             <div className="flex items-center gap-2 text-[10px] font-extrabold text-blue-600 uppercase tracking-widest">
@@ -70,7 +64,7 @@ export default function HardcodedLandingPage() {
           </header>
           
           <div className="aspect-video bg-slate-100 rounded-xl overflow-hidden relative border border-slate-200">
-             <img src="https://picsum.photos/seed/fb-news/800/450" alt="News Image" class="object-cover w-full h-full" />
+             <img src="https://picsum.photos/seed/fb-news/800/450" alt="News Image" className="object-cover w-full h-full" />
           </div>
 
           <div className="space-y-4 text-slate-700 leading-relaxed">
@@ -87,7 +81,7 @@ export default function HardcodedLandingPage() {
           <div className="absolute -top-4 left-1/2 -translate-x-1/2">
              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest bg-slate-50 px-2">Sponsored Link</span>
           </div>
-          <AdRenderer detection={detection} onAdClick={handleAdClick} />
+          <AdRenderer detection={detection} onAdClick={handleAdClick} nativeScript={config?.adConfig?.nativeBannerScript} />
         </section>
 
         <footer className="pt-16 pb-12 text-center space-y-4">
