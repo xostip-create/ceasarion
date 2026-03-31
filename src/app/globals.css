@@ -12,18 +12,18 @@
     --popover-foreground: 222 47% 11%;
     --primary: 214 100% 29%; /* Nestlé Blue */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 45 100% 50%; /* Arena Gold */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 0 72% 51%; /* Nestlé Red (KitKat) */
+    --accent: 0 72% 51%; /* Nestlé Red */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 214 100% 29%;
-    --radius: 0.75rem;
+    --ring: 45 100% 50%;
+    --radius: 1.25rem;
   }
 }
 
@@ -34,4 +34,17 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.arena-gradient {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.gift-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
