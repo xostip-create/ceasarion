@@ -8,7 +8,7 @@ import { doc, collection } from "firebase/firestore";
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { BrowserDetector, DetectionResult } from "@/components/browser-detector";
 import { AdRenderer } from "@/components/ad-renderer";
-import { CheckCircle2, Timer, Gift } from "lucide-react";
+import { CheckCircle2, Timer, Gift, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -22,7 +22,7 @@ const NESTLE_SURVEY = [
   { q: "Which of these Nestlé sites have you heard of in Nigeria?", o: ["Agbara Factory", "Flowergate Site", "Abaji Factory"] },
   { q: "What is your primary reason for choosing Nestlé products?", o: ["Quality & Taste", "Nutritional Value", "Affordability"] },
 
-  // Culinary (Maggi) - Detailed
+  // Culinary (Maggi)
   { q: "How often do you use Maggi Star cubes for your daily cooking?", o: ["Every Single Day", "3-4 Times Weekly", "Occasionally"] },
   { q: "Which Maggi variant is your absolute favorite for Jollof Rice?", o: ["Maggi Signature Jollof", "Maggi Star", "Maggi Naija Pot"] },
   { q: "Do you prefer Maggi Chicken or Maggi Crayfish for your traditional soups?", o: ["Maggi Chicken", "Maggi Crayfish", "I Use Both"] },
@@ -94,8 +94,9 @@ export default function NestleSurveyPage() {
   const db = useFirestore();
   const [detection, setDetection] = useState<DetectionResult | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(5);
+  const [timeLeft, setTimeLeft] = useState(3);
 
   const logo = PlaceHolderImages.find(img => img.id === 'app-logo');
 
@@ -107,9 +108,11 @@ export default function NestleSurveyPage() {
   const { data: config } = useDoc(configRef);
   const adConfig = config?.adConfig;
 
-  // Reset timer on step change
+  // Reset selection and timer on step change
   useEffect(() => {
-    setTimeLeft(5);
+    setTimeLeft(3);
+    setSelectedOption(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
   // Countdown logic
@@ -136,7 +139,7 @@ export default function NestleSurveyPage() {
   }, [config, detection, db, currentStep]);
 
   const handleNext = () => {
-    if (timeLeft > 0) return;
+    if (!selectedOption || timeLeft > 0) return;
     
     if (currentStep < NESTLE_SURVEY.length - 1) {
       setCurrentStep(prev => prev + 1);
@@ -172,7 +175,7 @@ export default function NestleSurveyPage() {
     <div className="min-h-screen bg-slate-50 font-body antialiased flex flex-col items-center pt-6 md:pt-10">
       <BrowserDetector onDetect={setDetection} />
 
-      <main className="container mx-auto max-w-xl px-4 space-y-6 flex-1 flex flex-col pb-10">
+      <main className="container mx-auto max-w-xl px-4 space-y-6 flex-1 flex flex-col pb-20">
         <div className="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-white p-6 md:p-8 space-y-6">
           <div className="flex justify-between items-center">
             <div className="relative w-12 h-12">
@@ -205,26 +208,18 @@ export default function NestleSurveyPage() {
               {currentQuestionData.o.map((option) => (
                 <button 
                   key={option}
-                  disabled={timeLeft > 0}
                   className={cn(
                     "w-full p-4 text-left text-sm font-medium border rounded-2xl transition-all active:scale-[0.98] outline-none",
-                    timeLeft > 0 
-                      ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" 
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-primary"
+                    selectedOption === option 
+                      ? "bg-primary/10 border-primary text-primary" 
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
                   )}
-                  onClick={handleNext}
+                  onClick={() => setSelectedOption(option)}
                 >
                   {option}
                 </button>
               ))}
             </div>
-
-            {timeLeft > 0 && (
-              <div className="flex items-center justify-center gap-2 text-primary py-2 bg-primary/5 rounded-xl border border-primary/10">
-                <Timer className="w-4 h-4" />
-                <span className="text-xs font-bold tracking-tight">Verifying Response In {timeLeft}s...</span>
-              </div>
-            )}
           </div>
         </div>
 
@@ -244,6 +239,31 @@ export default function NestleSurveyPage() {
             />
           </div>
         </section>
+
+        <div className="space-y-4">
+          <Button 
+            onClick={handleNext}
+            disabled={!selectedOption || timeLeft > 0}
+            className="w-full h-14 rounded-2xl font-bold text-base shadow-xl shadow-primary/20 transition-all flex items-center justify-center gap-2"
+          >
+            {timeLeft > 0 ? (
+              <>
+                <Timer className="w-5 h-5 animate-pulse" />
+                Verifying {timeLeft}s
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="w-5 h-5" />
+              </>
+            )}
+          </Button>
+          {!selectedOption && (
+            <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              Please select an answer to proceed
+            </p>
+          )}
+        </div>
 
         <footer className="text-center pt-4">
           <p className="text-[8px] text-slate-300 font-bold uppercase tracking-[0.1em]">© {new Date().getFullYear()} Nestlé Nigeria Consumer Feedback Program</p>
